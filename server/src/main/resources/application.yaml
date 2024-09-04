@@ -31,13 +31,13 @@ management:
 swagger2:
   show: true
   group-name: ${spring.application.name}
-  base-package: com.imooc.pan
-  title: r-pan-server docs
-  description: r-pan-server docs
+  base-package: org.xu.pan
+  title: y-pan-server docs
+  description: y-pan-server docs
   terms-of-service-url: http://127.0.0.1:${server.port}
-  contact-name: rubin
-  contact-url: https://blog.rubinchu.com
-  contact-email: rubinchu@126.com
+  contact-name: stan
+  contact-url: https://github.com/Qingchao-Xu
+  contact-email: 15154739019@163.com
   version: 1.0
 
 logging:

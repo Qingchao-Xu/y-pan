@@ -31,7 +31,7 @@ public class HttpLogFilter extends OncePerRequestFilter {
         filterChain.doFilter(requestWrapper, responseWrapper);
         HttpLogEntity httpLogEntity = HttpLogEntityBuilder.build(requestWrapper, responseWrapper, stopWatch);
         httpLogEntity.print();
-        responseWrapper.copyBodyToResponse(); // 重要
+        responseWrapper.copyBodyToResponse(); // 流重读，关键
     }
 
 }
