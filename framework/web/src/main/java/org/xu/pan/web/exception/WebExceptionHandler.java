@@ -1,6 +1,7 @@
 package org.xu.pan.web.exception;
 
 import org.xu.pan.core.exception.YPanBusinessException;
+import org.xu.pan.core.exception.YPanFrameworkException;
 import org.xu.pan.core.response.R;
 import org.xu.pan.core.response.ResponseCode;
 import org.springframework.validation.BindException;
@@ -53,6 +54,10 @@ public class WebExceptionHandler {
         return R.fail(ResponseCode.ERROR_PARAM.getCode(), fieldError.getDefaultMessage());
     }
 
+    @ExceptionHandler(value = YPanFrameworkException.class)
+    public R yPanFrameworkExceptionHandler(YPanFrameworkException e) {
+        return R.fail(ResponseCode.ERROR.getCode(), e.getMessage());
+    }
 
     @ExceptionHandler(value = RuntimeException.class)
     public R runtimeExceptionHandler(RuntimeException e) {
