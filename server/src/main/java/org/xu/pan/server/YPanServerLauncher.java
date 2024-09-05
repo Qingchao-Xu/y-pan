@@ -1,7 +1,9 @@
 package org.xu.pan.server;
 
 import io.swagger.annotations.Api;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +19,8 @@ import javax.validation.constraints.NotBlank;
 @RestController
 @Api("测试接口类")
 @Validated
+@EnableTransactionManagement
+@MapperScan(basePackages = YPanConstants.BASE_COMPONENT_SCAN_PATH + ".server.modules.**.mapper")
 public class YPanServerLauncher {
 
     public static void main(String[] args) {
@@ -25,6 +29,7 @@ public class YPanServerLauncher {
 
     @GetMapping("hello")
     public R<String> hello(@NotBlank(message = "name不能为空") String name) {
+        System.out.println(Thread.currentThread().getContextClassLoader());
         return R.success("hello" + name + "!");
     }
 
