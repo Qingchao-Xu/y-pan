@@ -2,6 +2,7 @@ package org.xu.pan.server.modules.user.controller;
 
 import org.xu.pan.core.response.R;
 import org.xu.pan.core.utils.IdUtil;
+import org.xu.pan.server.common.annotation.LoginIgnore;
 import org.xu.pan.server.common.utils.UserIdUtil;
 import org.xu.pan.server.modules.user.context.*;
 import org.xu.pan.server.modules.user.converter.UserConverter;
@@ -34,6 +35,7 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
+    @LoginIgnore
     @PostMapping("register")
     public R register(@Validated @RequestBody UserRegisterPO userRegisterPO) {
         UserRegisterContext userRegisterContext = userConverter.userRegisterPO2UserRegisterContext(userRegisterPO);
@@ -47,6 +49,7 @@ public class UserController {
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
+    @LoginIgnore
     @PostMapping("login")
     public R login(@Validated @RequestBody UserLoginPO userLoginPO) {
         UserLoginContext userLoginContext = userConverter.userLoginPO2UserLoginContext(userLoginPO);
