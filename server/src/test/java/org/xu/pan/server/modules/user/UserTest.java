@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
+import org.xu.pan.server.modules.user.vo.UserInfoVO;
 
 /**
  * 用户模块单元测试类
@@ -224,6 +225,53 @@ public class UserTest {
         resetPasswordContext.setToken(token + "_change");
 
         iUserService.resetPassword(resetPasswordContext);
+    }
+
+    /**
+     * 正常在线修改密码
+     */
+    @Test
+    public void changePasswordSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = iUserService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        ChangePasswordContext changePasswordContext = new ChangePasswordContext();
+
+        changePasswordContext.setUserId(register);
+        changePasswordContext.setOldPassword(PASSWORD);
+        changePasswordContext.setNewPassword(PASSWORD + "_change");
+
+        iUserService.changePassword(changePasswordContext);
+    }
+
+    /**
+     * 修改密码失败-旧密码错误
+     */
+    @Test(expected = YPanBusinessException.class)
+    public void changePasswordFailByWrongOldPassword() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = iUserService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        ChangePasswordContext changePasswordContext = new ChangePasswordContext();
+
+        changePasswordContext.setUserId(register);
+        changePasswordContext.setOldPassword(PASSWORD + "_change");
+        changePasswordContext.setNewPassword(PASSWORD + "_change");
+
+        iUserService.changePassword(changePasswordContext);
+    }
+
+    @Test
+    public void testQueryUserInfo() {
+
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = iUserService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        UserInfoVO userInfoVO = iUserService.info(register);
+        Assert.notNull(userInfoVO);
     }
 
 

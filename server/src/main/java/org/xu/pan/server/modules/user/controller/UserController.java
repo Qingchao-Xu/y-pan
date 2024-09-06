@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.xu.pan.server.modules.user.vo.UserInfoVO;
 
 /**
  * 该类是用户模块的控制器实体
@@ -111,6 +112,30 @@ public class UserController {
         return R.success();
     }
 
+    @ApiOperation(
+            value = "用户在线修改密码",
+            notes = "该接口提供了用户在线修改密码的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("password/change")
+    public R changePassword(@Validated @RequestBody ChangePasswordPO changePasswordPO) {
+        ChangePasswordContext changePasswordContext = userConverter.changePasswordPO2ChangePasswordContext(changePasswordPO);
+        changePasswordContext.setUserId(UserIdUtil.get());
+        iUserService.changePassword(changePasswordContext);
+        return R.success();
+    }
 
+    @ApiOperation(
+            value = "查询登录用户的基本信息",
+            notes = "该接口提供了查询登录用户的基本信息的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("/")
+    public R<UserInfoVO> info() {
+        UserInfoVO userInfoVO = iUserService.info(UserIdUtil.get());
+        return R.data(userInfoVO);
+    }
 
 }

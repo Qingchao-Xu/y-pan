@@ -18,4 +18,12 @@ public interface IUserFileService extends IService<YPanUserFile> {
      */
     Long createFolder(CreateFolderContext createFolderContext);
 
+    /**
+     * 查询用户的根文件夹信息
+     *
+     * @param userId
+     * @return
+     */
+    YPanUserFile getUserRootFile(Long userId);
+
 }

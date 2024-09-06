@@ -15,6 +15,7 @@ import org.xu.pan.core.utils.JwtUtil;
 import org.xu.pan.core.utils.PasswordUtil;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
+import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.user.constants.UserConstants;
 import org.xu.pan.server.modules.user.context.*;
@@ -23,6 +24,7 @@ import org.xu.pan.server.modules.user.entity.YPanUser;
 import org.xu.pan.server.modules.user.service.IUserService;
 import org.xu.pan.server.modules.user.mapper.YPanUserMapper;
 import org.springframework.stereotype.Service;
+import org.xu.pan.server.modules.user.vo.UserInfoVO;
 
 import java.util.Date;
 import java.util.Objects;
@@ -154,7 +156,107 @@ public class UserServiceImpl extends ServiceImpl<YPanUserMapper, YPanUser>
         checkAndResetUserPassword(resetPasswordContext);
     }
 
+    /**
+     * 在线修改密码
+     * 1、校验旧密码
+     * 2、重置新密码
+     * 3、退出当前的登录状态
+     *
+     * @param changePasswordContext
+     */
+    @Override
+    public void changePassword(ChangePasswordContext changePasswordContext) {
+        checkOldPassword(changePasswordContext);
+        doChangePassword(changePasswordContext);
+        exitLoginStatus(changePasswordContext);
+    }
+
+    /**
+     * 查询在线用户的基本信息
+     * 1、查询用户的基本信息实体
+     * 2、查询用户的根文件夹信息
+     * 3、拼装VO对象返回
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public UserInfoVO info(Long userId) {
+        YPanUser entity = getById(userId);
+        if (Objects.isNull(entity)) {
+            throw new YPanBusinessException("用户信息查询失败");
+        }
+
+        YPanUserFile yPanUserFile = getUserRootFileInfo(userId);
+        if (Objects.isNull(yPanUserFile)) {
+            throw new YPanBusinessException("查询用户根文件夹信息失败");
+        }
+
+        return userConverter.assembleUserInfoVO(entity, yPanUserFile);
+    }
+
     /****************private*****************/
+
+    /**
+     * 获取用户根文件夹信息实体
+     *
+     * @param userId
+     * @return
+     */
+    private YPanUserFile getUserRootFileInfo(Long userId) {
+        return iUserFileService.getUserRootFile(userId);
+    }
+
+    /**
+     * 退出用户的登录状态
+     *
+     * @param changePasswordContext
+     */
+    private void exitLoginStatus(ChangePasswordContext changePasswordContext) {
+        exit(changePasswordContext.getUserId());
+    }
+
+    /**
+     * 修改新密码
+     *
+     * @param changePasswordContext
+     */
+    private void doChangePassword(ChangePasswordContext changePasswordContext) {
+        String newPassword = changePasswordContext.getNewPassword();
+        YPanUser entity = changePasswordContext.getEntity();
+        String salt = entity.getSalt();
+
+        String encNewPassword = PasswordUtil.encryptPassword(salt, newPassword);
+
+        entity.setPassword(encNewPassword);
+
+        if (!updateById(entity)) {
+            throw new YPanBusinessException("修改用户密码失败");
+        }
+    }
+
+    /**
+     * 校验用户的旧密码
+     * 改不周会查询并封装用户的实体信息到上下文对象中
+     *
+     * @param changePasswordContext
+     */
+    private void checkOldPassword(ChangePasswordContext changePasswordContext) {
+        Long userId = changePasswordContext.getUserId();
+        String oldPassword = changePasswordContext.getOldPassword();
+
+        YPanUser entity = getById(userId);
+        if (Objects.isNull(entity)) {
+            throw new YPanBusinessException("用户信息不存在");
+        }
+        changePasswordContext.setEntity(entity);
+
+        String encOldPassword = PasswordUtil.encryptPassword(entity.getSalt(), oldPassword);
+        String dbOldPassword = entity.getPassword();
+        if (!Objects.equals(encOldPassword, dbOldPassword)) {
+            throw new YPanBusinessException("旧密码不正确");
+        }
+    }
 
     /**
      * 验证忘记密码的token是否有效

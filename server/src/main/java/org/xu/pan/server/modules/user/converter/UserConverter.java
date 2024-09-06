@@ -1,10 +1,12 @@
 package org.xu.pan.server.modules.user.converter;
 
+import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import org.xu.pan.server.modules.user.context.*;
 import org.xu.pan.server.modules.user.entity.YPanUser;
 import org.xu.pan.server.modules.user.po.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.xu.pan.server.modules.user.vo.UserInfoVO;
 
 /**
  * 用户模块实体转化工具类
@@ -60,5 +62,25 @@ public interface UserConverter {
      * @return
      */
     ResetPasswordContext resetPasswordPO2ResetPasswordContext(ResetPasswordPO resetPasswordPO);
+
+    /**
+     * ChangePasswordPO转ChangePasswordContext
+     *
+     * @param changePasswordPO
+     * @return
+     */
+    ChangePasswordContext changePasswordPO2ChangePasswordContext(ChangePasswordPO changePasswordPO);
+
+    /**
+     * 拼装用户基本信息返回实体
+     *
+     * @param yPanUser
+     * @param yPanUserFile
+     * @return
+     */
+    @Mapping(source = "yPanUser.username", target = "username")
+    @Mapping(source = "yPanUserFile.fileId", target = "rootFileId")
+    @Mapping(source = "yPanUserFile.filename", target = "rootFilename")
+    UserInfoVO assembleUserInfoVO(YPanUser yPanUser, YPanUserFile yPanUserFile);
 
 }
