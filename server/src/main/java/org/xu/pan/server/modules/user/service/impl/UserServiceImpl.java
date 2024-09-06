@@ -87,6 +87,24 @@ public class UserServiceImpl extends ServiceImpl<YPanUserMapper, YPanUser>
         return userLoginContext.getAccessToken();
     }
 
+    /**
+     * 用户退出登录
+     * <p>
+     * 1、清除用户的登录凭证缓存
+     *
+     * @param userId
+     */
+    @Override
+    public void exit(Long userId) {
+        try {
+            Cache cache = cacheManager.getCache(CacheConstants.Y_PAN_CACHE_NAME);
+            cache.evict(UserConstants.USER_LOGIN_PREFIX + userId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new YPanBusinessException("用户退出登录失败");
+        }
+    }
+
     /****************private*****************/
 
     /**

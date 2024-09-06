@@ -25,4 +25,11 @@ public interface IUserService extends IService<YPanUser> {
      * @return
      */
     String login(UserLoginContext userLoginContext);
+
+    /**
+     * 用户退出登录
+     *
+     * @param userId
+     */
+    void exit(Long userId);
 }

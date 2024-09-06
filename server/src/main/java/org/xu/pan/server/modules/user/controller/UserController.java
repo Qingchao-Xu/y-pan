@@ -2,6 +2,7 @@ package org.xu.pan.server.modules.user.controller;
 
 import org.xu.pan.core.response.R;
 import org.xu.pan.core.utils.IdUtil;
+import org.xu.pan.server.common.utils.UserIdUtil;
 import org.xu.pan.server.modules.user.context.*;
 import org.xu.pan.server.modules.user.converter.UserConverter;
 import org.xu.pan.server.modules.user.po.*;
@@ -51,6 +52,18 @@ public class UserController {
         UserLoginContext userLoginContext = userConverter.userLoginPO2UserLoginContext(userLoginPO);
         String accessToken = iUserService.login(userLoginContext);
         return R.data(accessToken);
+    }
+
+    @ApiOperation(
+            value = "用户登出接口",
+            notes = "该接口提供了用户登出的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("exit")
+    public R exit() {
+        iUserService.exit(UserIdUtil.get());
+        return R.success();
     }
 
 }

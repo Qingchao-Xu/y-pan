@@ -3,7 +3,9 @@ package org.xu.pan.server.modules.user;
 import cn.hutool.core.lang.Assert;
 import org.apache.commons.lang3.StringUtils;
 import org.xu.pan.core.exception.YPanBusinessException;
+import org.xu.pan.core.utils.JwtUtil;
 import org.xu.pan.server.YPanServerLauncher;
+import org.xu.pan.server.modules.user.constants.UserConstants;
 import org.xu.pan.server.modules.user.context.*;
 import org.xu.pan.server.modules.user.service.IUserService;
 import org.junit.Test;
@@ -86,6 +88,25 @@ public class UserTest {
         UserLoginContext userLoginContext = createUserLoginContext();
         userLoginContext.setPassword(userLoginContext.getPassword() + "_change");
         iUserService.login(userLoginContext);
+    }
+
+    /**
+     * 用户成功登出
+     */
+    @Test
+    public void exitSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = iUserService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        UserLoginContext userLoginContext = createUserLoginContext();
+        String accessToken = iUserService.login(userLoginContext);
+
+        Assert.isTrue(StringUtils.isNotBlank(accessToken));
+
+        Long userId = (Long) JwtUtil.analyzeToken(accessToken, UserConstants.LOGIN_USER_ID);
+
+        iUserService.exit(userId);
     }
 
 
