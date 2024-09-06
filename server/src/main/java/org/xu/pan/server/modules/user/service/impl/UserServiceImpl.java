@@ -2,6 +2,7 @@ package org.xu.pan.server.modules.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -16,8 +17,7 @@ import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.user.constants.UserConstants;
-import org.xu.pan.server.modules.user.context.UserLoginContext;
-import org.xu.pan.server.modules.user.context.UserRegisterContext;
+import org.xu.pan.server.modules.user.context.*;
 import org.xu.pan.server.modules.user.converter.UserConverter;
 import org.xu.pan.server.modules.user.entity.YPanUser;
 import org.xu.pan.server.modules.user.service.IUserService;
@@ -105,7 +105,109 @@ public class UserServiceImpl extends ServiceImpl<YPanUserMapper, YPanUser>
         }
     }
 
+    /**
+     * 用户忘记密码-校验用户名称
+     *
+     * @param checkUsernameContext
+     * @return
+     */
+    @Override
+    public String checkUsername(CheckUsernameContext checkUsernameContext) {
+        String question = baseMapper.selectQuestionByUsername(checkUsernameContext.getUsername());
+        if (StringUtils.isBlank(question)) {
+            throw new YPanBusinessException("没有此用户");
+        }
+        return question;
+    }
+
+    /**
+     * 用户忘记密码-校验密保答案
+     *
+     * @param checkAnswerContext
+     * @return
+     */
+    @Override
+    public String checkAnswer(CheckAnswerContext checkAnswerContext) {
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("username", checkAnswerContext.getUsername());
+        queryWrapper.eq("question", checkAnswerContext.getQuestion());
+        queryWrapper.eq("answer", checkAnswerContext.getAnswer());
+        int count = count(queryWrapper);
+
+        if (count == 0) {
+            throw new YPanBusinessException("密保答案错误");
+        }
+
+        return generateCheckAnswerToken(checkAnswerContext);
+    }
+
+    /**
+     * 重置用户密码
+     * 1、校验token是不是有效
+     * 2、重置密码
+     *
+     * @param resetPasswordContext
+     */
+    @Override
+    public void resetPassword(ResetPasswordContext resetPasswordContext) {
+        checkForgetPasswordToken(resetPasswordContext);
+        checkAndResetUserPassword(resetPasswordContext);
+    }
+
     /****************private*****************/
+
+    /**
+     * 验证忘记密码的token是否有效
+     *
+     * @param resetPasswordContext
+     */
+    private void checkForgetPasswordToken(ResetPasswordContext resetPasswordContext) {
+        String token = resetPasswordContext.getToken();
+        Object value = JwtUtil.analyzeToken(token, UserConstants.FORGET_USERNAME);
+        if (Objects.isNull(value)) {
+            throw new YPanBusinessException(ResponseCode.TOKEN_EXPIRE);
+        }
+        String tokenUsername = String.valueOf(value);
+        if (!Objects.equals(tokenUsername, resetPasswordContext.getUsername())) {
+            throw new YPanBusinessException("token错误");
+        }
+    }
+
+    /**
+     * 校验用户信息并重置用户密码
+     *
+     * @param resetPasswordContext
+     */
+    private void checkAndResetUserPassword(ResetPasswordContext resetPasswordContext) {
+        String username = resetPasswordContext.getUsername();
+        String password = resetPasswordContext.getPassword();
+        YPanUser entity = getYPanUserByUsername(username);
+        if (Objects.isNull(entity)) {
+            throw new YPanBusinessException("用户信息不存在");
+        }
+
+        String newDbPassword = PasswordUtil.encryptPassword(entity.getSalt(), password);
+        entity.setPassword(newDbPassword);
+        entity.setUpdateTime(new Date());
+
+        if (!updateById(entity)) {
+            throw new YPanBusinessException("重置用户密码失败");
+        }
+    }
+
+
+    /**
+     * 生成用户忘记密码-校验密保答案通过的临时token
+     * token的失效时间为五分钟之后
+     *
+     * @param checkAnswerContext
+     * @return
+     */
+    private String generateCheckAnswerToken(CheckAnswerContext checkAnswerContext) {
+        String token = JwtUtil.generateToken(checkAnswerContext.getUsername(), UserConstants.FORGET_USERNAME, checkAnswerContext.getUsername(), UserConstants.FIVE_MINUTES_LONG);
+        return token;
+    }
+
 
     /**
      * 生成并保存登陆之后的凭证

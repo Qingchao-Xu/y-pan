@@ -1,5 +1,6 @@
 package org.xu.pan.server.modules.user.mapper;
 
+import org.apache.ibatis.annotations.Param;
 import org.xu.pan.server.modules.user.entity.YPanUser;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
@@ -11,6 +12,12 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface YPanUserMapper extends BaseMapper<YPanUser> {
 
+    /**
+     * 通过用户名称查询用户设置的密保问题
+     * @param username
+     * @return
+     */
+    String selectQuestionByUsername(@Param("username") String username);
 }
 
 

@@ -31,7 +31,7 @@ public class UserController {
 
     @ApiOperation(
             value = "用户注册接口",
-            notes = "该接口提供了用户注册的功能，实现了冥等性注册的逻辑，可以放心多并发调用",
+            notes = "该接口提供了用户注册的功能，实现了幂等性注册的逻辑，可以放心多并发调用",
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE
     )
@@ -68,5 +68,49 @@ public class UserController {
         iUserService.exit(UserIdUtil.get());
         return R.success();
     }
+
+    @ApiOperation(
+            value = "用户忘记密码-校验用户名",
+            notes = "该接口提供了用户忘记密码-校验用户名的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("username/check")
+    public R checkUsername(@Validated @RequestBody CheckUsernamePO checkUsernamePO) {
+        CheckUsernameContext checkUsernameContext = userConverter.checkUsernamePO2CheckUsernameContext(checkUsernamePO);
+        String question = iUserService.checkUsername(checkUsernameContext);
+        return R.data(question);
+    }
+
+    @ApiOperation(
+            value = "用户忘记密码-校验密保答案",
+            notes = "该接口提供了用户忘记密码-校验密保答案的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @LoginIgnore
+    @PostMapping("answer/check")
+    public R checkAnswer(@Validated @RequestBody CheckAnswerPO checkAnswerPO) {
+        CheckAnswerContext checkAnswerContext = userConverter.checkAnswerPO2CheckAnswerContext(checkAnswerPO);
+        String token = iUserService.checkAnswer(checkAnswerContext);
+        return R.data(token);
+    }
+
+    @ApiOperation(
+            value = "用户忘记密码-重置新密码",
+            notes = "该接口提供了用户忘记密码-重置新密码的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("password/reset")
+    @LoginIgnore
+    public R resetPassword(@Validated @RequestBody ResetPasswordPO resetPasswordPO) {
+        ResetPasswordContext resetPasswordContext = userConverter.resetPasswordPO2ResetPasswordContext(resetPasswordPO);
+        iUserService.resetPassword(resetPasswordContext);
+        return R.success();
+    }
+
+
 
 }

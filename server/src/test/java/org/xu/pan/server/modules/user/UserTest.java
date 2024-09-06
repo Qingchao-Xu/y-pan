@@ -109,6 +109,123 @@ public class UserTest {
         iUserService.exit(userId);
     }
 
+    /**
+     * 校验用户名称通过
+     */
+    @Test
+    public void checkUsernameSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = iUserService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckUsernameContext checkUsernameContext = new CheckUsernameContext();
+        checkUsernameContext.setUsername(USERNAME);
+        String question = iUserService.checkUsername(checkUsernameContext);
+        Assert.isTrue(StringUtils.isNotBlank(question));
+    }
+
+    /**
+     * 校验用户名称失败-没有查询到该用户
+     */
+    @Test(expected = YPanBusinessException.class)
+    public void checkUsernameNotExist() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = iUserService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckUsernameContext checkUsernameContext = new CheckUsernameContext();
+        checkUsernameContext.setUsername(USERNAME + "_change");
+        iUserService.checkUsername(checkUsernameContext);
+    }
+
+    /**
+     * 校验用户密保问题答案通过
+     */
+    @Test
+    public void checkAnswerSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = iUserService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername(USERNAME);
+        checkAnswerContext.setQuestion(QUESTION);
+        checkAnswerContext.setAnswer(ANSWER);
+
+        String token = iUserService.checkAnswer(checkAnswerContext);
+
+        Assert.isTrue(StringUtils.isNotBlank(token));
+    }
+
+    /**
+     * 校验用户密保问题答案失败
+     */
+    @Test(expected = YPanBusinessException.class)
+    public void checkAnswerFail() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = iUserService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername(USERNAME);
+        checkAnswerContext.setQuestion(QUESTION);
+        checkAnswerContext.setAnswer(ANSWER + "_change");
+
+        iUserService.checkAnswer(checkAnswerContext);
+    }
+
+    /**
+     * 正常重置用户密码
+     */
+    @Test
+    public void resetPasswordSuccess() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = iUserService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername(USERNAME);
+        checkAnswerContext.setQuestion(QUESTION);
+        checkAnswerContext.setAnswer(ANSWER);
+
+        String token = iUserService.checkAnswer(checkAnswerContext);
+
+        Assert.isTrue(StringUtils.isNotBlank(token));
+
+        ResetPasswordContext resetPasswordContext = new ResetPasswordContext();
+        resetPasswordContext.setUsername(USERNAME);
+        resetPasswordContext.setPassword(PASSWORD + "_change");
+        resetPasswordContext.setToken(token);
+
+        iUserService.resetPassword(resetPasswordContext);
+    }
+
+    /**
+     * 用户重置密码失败-token异常
+     */
+    @Test(expected = YPanBusinessException.class)
+    public void resetPasswordTokenError() {
+        UserRegisterContext context = createUserRegisterContext();
+        Long register = iUserService.register(context);
+        Assert.isTrue(register.longValue() > 0L);
+
+        CheckAnswerContext checkAnswerContext = new CheckAnswerContext();
+        checkAnswerContext.setUsername(USERNAME);
+        checkAnswerContext.setQuestion(QUESTION);
+        checkAnswerContext.setAnswer(ANSWER);
+
+        String token = iUserService.checkAnswer(checkAnswerContext);
+
+        Assert.isTrue(StringUtils.isNotBlank(token));
+
+        ResetPasswordContext resetPasswordContext = new ResetPasswordContext();
+        resetPasswordContext.setUsername(USERNAME);
+        resetPasswordContext.setPassword(PASSWORD + "_change");
+        resetPasswordContext.setToken(token + "_change");
+
+        iUserService.resetPassword(resetPasswordContext);
+    }
+
 
     private final static String USERNAME = "stan";
     private final static String PASSWORD = "123456";
