@@ -1,13 +1,19 @@
 package org.xu.pan.server.modules.file.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.xu.pan.core.constants.YPanConstants;
 import org.xu.pan.core.exception.YPanBusinessException;
 import org.xu.pan.core.utils.IdUtil;
+import org.xu.pan.server.common.event.file.DeleteFileEvent;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
+import org.xu.pan.server.modules.file.context.DeleteFileContext;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
 import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
@@ -21,6 +27,8 @@ import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
 * @author 23561
@@ -29,7 +37,14 @@ import java.util.Objects;
 */
 @Service(value = "userFileService")
 public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUserFile>
-    implements IUserFileService {
+    implements IUserFileService, ApplicationContextAware {
+
+    private ApplicationContext applicationContext;
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.applicationContext = applicationContext;
+    }
 
     /**
      * 创建文件夹信息
@@ -87,8 +102,90 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
         doUpdateFilename(context);
     }
 
+    /**
+     * 批量删除用户文件
+     * <p>
+     * 1、校验删除的条件
+     * 2、执行批量删除的动作
+     * 3、发布批量删除文件的事件，给其他模块订阅使用
+     *
+     * @param context
+     */
+    @Override
+    public void deleteFile(DeleteFileContext context) {
+        checkFileDeleteCondition(context);
+        doDeleteFile(context);
+        afterFileDelete(context);
+    }
+
 
     /***************private*****************/
+
+    /**
+     * 文件删除的后置操作
+     * <p>
+     * 1、对外发布文件删除的事件
+     *
+     * @param context
+     */
+    private void afterFileDelete(DeleteFileContext context) {
+        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(this, context.getFileIdList());
+        applicationContext.publishEvent(deleteFileEvent);
+    }
+
+    /**
+     * 执行文件删除的操作
+     *
+     * @param context
+     */
+    private void doDeleteFile(DeleteFileContext context) {
+        List<Long> fileIdList = context.getFileIdList();
+
+        UpdateWrapper updateWrapper = new UpdateWrapper();
+        updateWrapper.in("file_id", fileIdList);
+        updateWrapper.set("del_flag", DelFlagEnum.YES.getCode());
+        updateWrapper.set("update_time", new Date());
+
+        if (!update(updateWrapper)) {
+            throw new YPanBusinessException("文件删除失败");
+        }
+    }
+
+    /**
+     * 删除文件之前的前置校验
+     * <p>
+     * 1、文件ID合法校验
+     * 2、用户拥有删除该文件的权限
+     *
+     * @param context
+     */
+    private void checkFileDeleteCondition(DeleteFileContext context) {
+        List<Long> fileIdList = context.getFileIdList();
+
+        List<YPanUserFile> yPanUserFiles = listByIds(fileIdList);
+        if (yPanUserFiles.size() != fileIdList.size()) {
+            throw new YPanBusinessException("存在不合法的文件记录");
+        }
+
+        Set<Long> fileIdSet = yPanUserFiles.stream().map(YPanUserFile::getFileId).collect(Collectors.toSet());
+        int oldSize = fileIdSet.size();
+        fileIdSet.addAll(fileIdList);
+        int newSize = fileIdSet.size();
+
+        if (oldSize != newSize) {
+            throw new YPanBusinessException("存在不合法的文件记录");
+        }
+
+        Set<Long> userIdSet = yPanUserFiles.stream().map(YPanUserFile::getUserId).collect(Collectors.toSet());
+        if (userIdSet.size() != 1) {
+            throw new YPanBusinessException("存在不合法的文件记录");
+        }
+
+        Long dbUserId = userIdSet.stream().findFirst().get();
+        if (!Objects.equals(dbUserId, context.getUserId())) {
+            throw new YPanBusinessException("当前登录用户没有删除该文件的权限");
+        }
+    }
 
     /**
      * 执行文件重命名的操作

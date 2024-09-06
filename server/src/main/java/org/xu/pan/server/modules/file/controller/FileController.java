@@ -14,11 +14,13 @@ import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.server.common.utils.UserIdUtil;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
+import org.xu.pan.server.modules.file.context.DeleteFileContext;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
 import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
 import org.xu.pan.server.modules.file.converter.FileConverter;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.po.CreateFolderPO;
+import org.xu.pan.server.modules.file.po.DeleteFilePO;
 import org.xu.pan.server.modules.file.po.UpdateFilenamePO;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
@@ -93,6 +95,24 @@ public class FileController {
     public R updateFilename(@Validated @RequestBody UpdateFilenamePO updateFilenamePO) {
         UpdateFilenameContext context = fileConverter.updateFilenamePO2UpdateFilenameContext(updateFilenamePO);
         iUserFileService.updateFilename(context);
+        return R.success();
+    }
+
+    @ApiOperation(
+            value = "批量删除文件",
+            notes = "该接口提供了批量删除文件的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @DeleteMapping("file")
+    public R deleteFile(@Validated @RequestBody DeleteFilePO deleteFilePO) {
+        DeleteFileContext context = fileConverter.deleteFilePO2DeleteFileContext(deleteFilePO);
+
+        String fileIds = deleteFilePO.getFileIds();
+        List<Long> fileIdList = Splitter.on(YPanConstants.COMMON_SEPARATOR).splitToList(fileIds).stream().map(IdUtil::decrypt).collect(Collectors.toList());
+
+        context.setFileIdList(fileIdList);
+        iUserFileService.deleteFile(context);
         return R.success();
     }
 

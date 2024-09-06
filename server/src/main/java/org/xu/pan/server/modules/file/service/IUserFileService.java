@@ -1,6 +1,7 @@
 package org.xu.pan.server.modules.file.service;
 
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
+import org.xu.pan.server.modules.file.context.DeleteFileContext;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
 import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
@@ -45,5 +46,12 @@ public interface IUserFileService extends IService<YPanUserFile> {
      * @param context
      */
     void updateFilename(UpdateFilenameContext context);
+
+    /**
+     * 批量删除用户文件
+     *
+     * @param context
+     */
+    void deleteFile(DeleteFileContext context);
 
 }

@@ -19,4 +19,7 @@ public interface FileConverter {
     @Mapping(target = "userId", expression = "java(org.xu.pan.server.common.utils.UserIdUtil.get())")
     UpdateFilenameContext updateFilenamePO2UpdateFilenameContext(UpdateFilenamePO updateFilenamePO);
 
+    @Mapping(target = "userId", expression = "java(org.xu.pan.server.common.utils.UserIdUtil.get())")
+    DeleteFileContext deleteFilePO2DeleteFileContext(DeleteFilePO deleteFilePO);
+
 }
