@@ -2,6 +2,7 @@ package org.xu.pan.server.modules.file.service;
 
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
+import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
@@ -37,5 +38,12 @@ public interface IUserFileService extends IService<YPanUserFile> {
      * @return
      */
     List<YPanUserFileVO> getFileList(QueryFileListContext context);
+
+    /**
+     * 更新文件名称
+     *
+     * @param context
+     */
+    void updateFilename(UpdateFilenameContext context);
 
 }

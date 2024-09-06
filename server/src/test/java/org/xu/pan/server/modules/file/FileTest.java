@@ -13,9 +13,11 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.xu.pan.core.exception.YPanBusinessException;
 import org.xu.pan.server.YPanServerLauncher;
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
+import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
@@ -76,6 +78,133 @@ public class FileTest {
 
         Long fileId = iUserFileService.createFolder(context);
         Assert.notNull(fileId);
+    }
+
+    /**
+     * 测试文件重命名失败-文件ID无效
+     */
+    @Test(expected = YPanBusinessException.class)
+    public void testUpdateFilenameFailByWrongFileId() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = iUserFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        UpdateFilenameContext updateFilenameContext = new UpdateFilenameContext();
+        updateFilenameContext.setFileId(fileId + 1);
+        updateFilenameContext.setUserId(userId);
+        updateFilenameContext.setNewFilename("folder-name-new");
+
+        iUserFileService.updateFilename(updateFilenameContext);
+    }
+
+    /**
+     * 测试当前用户ID无效
+     */
+    @Test(expected = YPanBusinessException.class)
+    public void testUpdateFilenameFailByWrongUserId() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = iUserFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        UpdateFilenameContext updateFilenameContext = new UpdateFilenameContext();
+        updateFilenameContext.setFileId(fileId);
+        updateFilenameContext.setUserId(userId + 1);
+        updateFilenameContext.setNewFilename("folder-name-new");
+
+        iUserFileService.updateFilename(updateFilenameContext);
+    }
+
+    /**
+     * 测试文件名称重复
+     */
+    @Test(expected = YPanBusinessException.class)
+    public void testUpdateFilenameFailByWrongFilename() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = iUserFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        UpdateFilenameContext updateFilenameContext = new UpdateFilenameContext();
+        updateFilenameContext.setFileId(fileId);
+        updateFilenameContext.setUserId(userId);
+        updateFilenameContext.setNewFilename("folder-name");
+
+        iUserFileService.updateFilename(updateFilenameContext);
+    }
+
+    /**
+     * 校验文件名称已被占用
+     */
+    @Test(expected = YPanBusinessException.class)
+    public void testUpdateFilenameFailByFilenameUnAvailable() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-1");
+
+        Long fileId = iUserFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-2");
+
+        fileId = iUserFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        UpdateFilenameContext updateFilenameContext = new UpdateFilenameContext();
+        updateFilenameContext.setFileId(fileId);
+        updateFilenameContext.setUserId(userId);
+        updateFilenameContext.setNewFilename("folder-name-1");
+
+        iUserFileService.updateFilename(updateFilenameContext);
+    }
+
+    /**
+     * 测试更新文件名称成功
+     */
+    @Test
+    public void testUpdateFilenameSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-old");
+
+        Long fileId = iUserFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        UpdateFilenameContext updateFilenameContext = new UpdateFilenameContext();
+        updateFilenameContext.setFileId(fileId);
+        updateFilenameContext.setUserId(userId);
+        updateFilenameContext.setNewFilename("folder-name-new");
+
+        iUserFileService.updateFilename(updateFilenameContext);
     }
 
     /************************************************private************************************************/

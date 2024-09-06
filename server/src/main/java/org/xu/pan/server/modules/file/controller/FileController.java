@@ -15,9 +15,11 @@ import org.xu.pan.server.common.utils.UserIdUtil;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
+import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
 import org.xu.pan.server.modules.file.converter.FileConverter;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.po.CreateFolderPO;
+import org.xu.pan.server.modules.file.po.UpdateFilenamePO;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 
@@ -79,6 +81,19 @@ public class FileController {
         CreateFolderContext context = fileConverter.createFolderPO2CreateFolderContext(createFolderPO);
         Long fileId = iUserFileService.createFolder(context);
         return R.data(IdUtil.encrypt(fileId));
+    }
+
+    @ApiOperation(
+            value = "文件重命名",
+            notes = "该接口提供了文件重命名的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PutMapping("file")
+    public R updateFilename(@Validated @RequestBody UpdateFilenamePO updateFilenamePO) {
+        UpdateFilenameContext context = fileConverter.updateFilenamePO2UpdateFilenameContext(updateFilenamePO);
+        iUserFileService.updateFilename(context);
+        return R.success();
     }
 
 

@@ -9,6 +9,7 @@ import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
+import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.enums.FolderFlagEnum;
@@ -19,6 +20,7 @@ import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 /**
 * @author 23561
@@ -72,8 +74,78 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
         return baseMapper.selectFileList(context);
     }
 
+    /**
+     * 更新文件名称
+     * 1、校验更新文件名称的条件
+     * 2、执行更新文件名称的操作
+     *
+     * @param context
+     */
+    @Override
+    public void updateFilename(UpdateFilenameContext context) {
+        checkUpdateFilenameCondition(context);
+        doUpdateFilename(context);
+    }
+
 
     /***************private*****************/
+
+    /**
+     * 执行文件重命名的操作
+     *
+     * @param context
+     */
+    private void doUpdateFilename(UpdateFilenameContext context) {
+        YPanUserFile entity = context.getEntity();
+        entity.setFilename(context.getNewFilename());
+        entity.setUpdateUser(context.getUserId());
+        entity.setUpdateTime(new Date());
+
+        if (!updateById(entity)) {
+            throw new YPanBusinessException("文件重命名失败");
+        }
+    }
+
+    /**
+     * 更新文件名称的条件校验
+     * <p>
+     * 1、文件ID是有效的
+     * 2、用户有权限更新该文件的文件名称
+     * 3、新旧文件名称不能一样
+     * 4、不能使用当前文件夹下面的子文件的名称
+     *
+     * @param context
+     */
+    private void checkUpdateFilenameCondition(UpdateFilenameContext context) {
+
+        Long fileId = context.getFileId();
+        YPanUserFile entity = getById(fileId);
+
+        if (Objects.isNull(entity)) {
+            throw new YPanBusinessException("该文件ID无效");
+        }
+
+        if (!Objects.equals(entity.getUserId(), context.getUserId())) {
+            throw new YPanBusinessException("当前登录用户没有修改该文件名称的权限");
+        }
+
+        if (Objects.equals(entity.getFilename(), context.getNewFilename())) {
+            throw new YPanBusinessException("请换一个新的文件名称来修改");
+        }
+
+
+        QueryWrapper queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("parent_id", entity.getParentId());
+        queryWrapper.eq("filename", context.getNewFilename());
+        int count = count(queryWrapper);
+
+        if (count > 0) {
+            throw new YPanBusinessException("该文件名称已被占用");
+        }
+
+        context.setEntity(entity);
+    }
+
 
     /**
      * 保存用户文件的映射记录

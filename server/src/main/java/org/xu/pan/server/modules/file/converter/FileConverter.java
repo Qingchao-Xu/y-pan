@@ -15,4 +15,8 @@ public interface FileConverter {
     @Mapping(target = "userId", expression = "java(org.xu.pan.server.common.utils.UserIdUtil.get())")
     CreateFolderContext createFolderPO2CreateFolderContext(CreateFolderPO createFolderPO);
 
+    @Mapping(target = "fileId", expression = "java(org.xu.pan.core.utils.IdUtil.decrypt(updateFilenamePO.getFileId()))")
+    @Mapping(target = "userId", expression = "java(org.xu.pan.server.common.utils.UserIdUtil.get())")
+    UpdateFilenameContext updateFilenamePO2UpdateFilenameContext(UpdateFilenamePO updateFilenamePO);
+
 }
