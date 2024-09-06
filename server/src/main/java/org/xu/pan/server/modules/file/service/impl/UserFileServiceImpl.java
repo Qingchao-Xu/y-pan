@@ -8,14 +8,17 @@ import org.xu.pan.core.exception.YPanBusinessException;
 import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
+import org.xu.pan.server.modules.file.context.QueryFileListContext;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.enums.FolderFlagEnum;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.mapper.YPanUserFileMapper;
 import org.springframework.stereotype.Service;
+import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 
 import java.util.Date;
+import java.util.List;
 
 /**
 * @author 23561
@@ -56,6 +59,17 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
         queryWrapper.eq("del_flag", DelFlagEnum.NO.getCode());
         queryWrapper.eq("folder_flag", FolderFlagEnum.YES.getCode());
         return getOne(queryWrapper);
+    }
+
+    /**
+     * 查询用户的文件列表
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public List<YPanUserFileVO> getFileList(QueryFileListContext context) {
+        return baseMapper.selectFileList(context);
     }
 
 

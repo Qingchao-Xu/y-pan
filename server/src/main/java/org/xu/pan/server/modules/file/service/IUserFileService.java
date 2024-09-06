@@ -1,8 +1,12 @@
 package org.xu.pan.server.modules.file.service;
 
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
+import org.xu.pan.server.modules.file.context.QueryFileListContext;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
+
+import java.util.List;
 
 /**
 * @author 23561
@@ -25,5 +29,13 @@ public interface IUserFileService extends IService<YPanUserFile> {
      * @return
      */
     YPanUserFile getUserRootFile(Long userId);
+
+    /**
+     * 查询用户的文件列表
+     *
+     * @param context
+     * @return
+     */
+    List<YPanUserFileVO> getFileList(QueryFileListContext context);
 
 }
