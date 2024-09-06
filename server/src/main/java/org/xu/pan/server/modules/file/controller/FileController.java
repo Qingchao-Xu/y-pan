@@ -13,8 +13,11 @@ import org.xu.pan.core.response.R;
 import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.server.common.utils.UserIdUtil;
 import org.xu.pan.server.modules.file.constants.FileConstants;
+import org.xu.pan.server.modules.file.context.CreateFolderContext;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
+import org.xu.pan.server.modules.file.converter.FileConverter;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
+import org.xu.pan.server.modules.file.po.CreateFolderPO;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 
@@ -34,6 +37,9 @@ public class FileController {
 
     @Autowired
     private IUserFileService iUserFileService;
+
+    @Autowired
+    private FileConverter fileConverter;
 
     @ApiOperation(
             value = "查询文件列表",
@@ -62,9 +68,18 @@ public class FileController {
         return R.data(result);
     }
 
-
-
-
+    @ApiOperation(
+            value = "创建文件夹",
+            notes = "该接口提供了创建文件夹的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("file/folder")
+    public R<String> createFolder(@Validated @RequestBody CreateFolderPO createFolderPO) {
+        CreateFolderContext context = fileConverter.createFolderPO2CreateFolderContext(createFolderPO);
+        Long fileId = iUserFileService.createFolder(context);
+        return R.data(IdUtil.encrypt(fileId));
+    }
 
 
 }

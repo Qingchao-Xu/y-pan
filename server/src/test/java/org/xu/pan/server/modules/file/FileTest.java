@@ -14,6 +14,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.xu.pan.server.YPanServerLauncher;
+import org.xu.pan.server.modules.file.context.CreateFolderContext;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.service.IUserFileService;
@@ -57,6 +58,24 @@ public class FileTest {
 
         List<YPanUserFileVO> result = iUserFileService.getFileList(context);
         Assert.isTrue(CollectionUtils.isEmpty(result));
+    }
+
+    /**
+     * 测试创建文件夹成功
+     */
+    @Test
+    public void testCreateFolderSuccess() {
+
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name");
+
+        Long fileId = iUserFileService.createFolder(context);
+        Assert.notNull(fileId);
     }
 
     /************************************************private************************************************/
