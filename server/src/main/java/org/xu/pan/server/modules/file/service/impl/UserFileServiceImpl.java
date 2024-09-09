@@ -3,22 +3,25 @@ package org.xu.pan.server.modules.file.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.xu.pan.core.constants.YPanConstants;
 import org.xu.pan.core.exception.YPanBusinessException;
+import org.xu.pan.core.utils.FileUtils;
 import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.server.common.event.file.DeleteFileEvent;
 import org.xu.pan.server.modules.file.constants.FileConstants;
-import org.xu.pan.server.modules.file.context.CreateFolderContext;
-import org.xu.pan.server.modules.file.context.DeleteFileContext;
-import org.xu.pan.server.modules.file.context.QueryFileListContext;
-import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
+import org.xu.pan.server.modules.file.context.*;
+import org.xu.pan.server.modules.file.entity.YPanFile;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
+import org.xu.pan.server.modules.file.enums.FileTypeEnum;
 import org.xu.pan.server.modules.file.enums.FolderFlagEnum;
+import org.xu.pan.server.modules.file.service.IFileService;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.mapper.YPanUserFileMapper;
 import org.springframework.stereotype.Service;
@@ -40,6 +43,9 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
     implements IUserFileService, ApplicationContextAware {
 
     private ApplicationContext applicationContext;
+
+    @Autowired
+    private IFileService iFileService;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -118,8 +124,48 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
         afterFileDelete(context);
     }
 
+    /**
+     * 文件秒传功能
+     * <p>
+     * 1、判断用户之前是否上传过该文件
+     * 2、如果上传过该文件，只需要生成一个该文件和当前用户在指定文件夹下面的关联关系即可
+     *
+     * @param context
+     * @return true 代表用户之前上传过相同文件并成功挂在了关联关系 false 用户没有上传过该文件，请手动执行上传逻辑
+     */
+    @Override
+    public boolean secUpload(SecUploadFileContext context) {
+        List<YPanFile> fileList = getFileListByUserIdAndIdentifier(context.getUserId(), context.getIdentifier());
+        if (CollectionUtils.isNotEmpty(fileList)) {
+            YPanFile record = fileList.get(YPanConstants.ZERO_INT);
+            saveUserFile(context.getParentId(),
+                    context.getFilename(),
+                    FolderFlagEnum.NO,
+                    FileTypeEnum.getFileTypeCode(FileUtils.getFileSuffix(context.getFilename())),
+                    record.getFileId(),
+                    context.getUserId(),
+                    record.getFileSizeDesc());
+            return true;
+        }
+        return false;
+    }
+
 
     /***************private*****************/
+
+    /**
+     * 查询用户文件列表根据文件的唯一标识
+     *
+     * @param userId
+     * @param identifier
+     * @return
+     */
+    private List<YPanFile> getFileListByUserIdAndIdentifier(Long userId, String identifier) {
+        QueryRealFileListContext context = new QueryRealFileListContext();
+        context.setUserId(userId);
+        context.setIdentifier(identifier);
+        return iFileService.getFileList(context);
+    }
 
     /**
      * 文件删除的后置操作

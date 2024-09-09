@@ -1,9 +1,6 @@
 package org.xu.pan.server.modules.file.service;
 
-import org.xu.pan.server.modules.file.context.CreateFolderContext;
-import org.xu.pan.server.modules.file.context.DeleteFileContext;
-import org.xu.pan.server.modules.file.context.QueryFileListContext;
-import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
+import org.xu.pan.server.modules.file.context.*;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
@@ -53,5 +50,13 @@ public interface IUserFileService extends IService<YPanUserFile> {
      * @param context
      */
     void deleteFile(DeleteFileContext context);
+
+    /**
+     * 文件秒传功能
+     *
+     * @param context
+     * @return
+     */
+    boolean secUpload(SecUploadFileContext context);
 
 }

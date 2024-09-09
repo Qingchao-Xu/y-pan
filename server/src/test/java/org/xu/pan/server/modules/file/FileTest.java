@@ -14,12 +14,12 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.xu.pan.core.exception.YPanBusinessException;
+import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.server.YPanServerLauncher;
-import org.xu.pan.server.modules.file.context.CreateFolderContext;
-import org.xu.pan.server.modules.file.context.DeleteFileContext;
-import org.xu.pan.server.modules.file.context.QueryFileListContext;
-import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
+import org.xu.pan.server.modules.file.context.*;
+import org.xu.pan.server.modules.file.entity.YPanFile;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
+import org.xu.pan.server.modules.file.service.IFileService;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 import org.xu.pan.server.modules.user.context.UserLoginContext;
@@ -44,6 +44,9 @@ public class FileTest {
 
     @Autowired
     private IUserService iUserService;
+
+    @Autowired
+    private IFileService iFileService;
 
     /**
      * 测试用户查询文件列表成功
@@ -281,6 +284,70 @@ public class FileTest {
         deleteFileContext.setUserId(userId);
 
         iUserFileService.deleteFile(deleteFileContext);
+    }
+
+    /**
+     * 校验秒传文件成功
+     */
+    @Test
+    public void testSecUploadSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        String identifier = "123456789";
+
+        YPanFile record = new YPanFile();
+        record.setFileId(IdUtil.get());
+        record.setFilename("filename");
+        record.setRealPath("realpath");
+        record.setFileSize("fileSize");
+        record.setFileSizeDesc("fileSizeDesc");
+        record.setFilePreviewContentType("");
+        record.setIdentifier(identifier);
+        record.setCreateUser(userId);
+        record.setCreateTime(new Date());
+        iFileService.save(record);
+
+        SecUploadFileContext context = new SecUploadFileContext();
+        context.setIdentifier(identifier);
+        context.setFilename("filename");
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+
+        boolean result = iUserFileService.secUpload(context);
+        Assert.isTrue(result);
+    }
+
+    /**
+     * 校验秒传文件失败
+     */
+    @Test
+    public void testSecUploadFail() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        String identifier = "123456789";
+
+        YPanFile record = new YPanFile();
+        record.setFileId(IdUtil.get());
+        record.setFilename("filename");
+        record.setRealPath("realpath");
+        record.setFileSize("fileSize");
+        record.setFileSizeDesc("fileSizeDesc");
+        record.setFilePreviewContentType("");
+        record.setIdentifier(identifier);
+        record.setCreateUser(userId);
+        record.setCreateTime(new Date());
+        iFileService.save(record);
+
+        SecUploadFileContext context = new SecUploadFileContext();
+        context.setIdentifier(identifier + "_update");
+        context.setFilename("filename");
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+
+        boolean result = iUserFileService.secUpload(context);
+        Assert.isFalse(result);
     }
 
     /************************************************private************************************************/

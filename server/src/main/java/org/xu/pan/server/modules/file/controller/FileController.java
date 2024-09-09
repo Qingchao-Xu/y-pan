@@ -13,14 +13,12 @@ import org.xu.pan.core.response.R;
 import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.server.common.utils.UserIdUtil;
 import org.xu.pan.server.modules.file.constants.FileConstants;
-import org.xu.pan.server.modules.file.context.CreateFolderContext;
-import org.xu.pan.server.modules.file.context.DeleteFileContext;
-import org.xu.pan.server.modules.file.context.QueryFileListContext;
-import org.xu.pan.server.modules.file.context.UpdateFilenameContext;
+import org.xu.pan.server.modules.file.context.*;
 import org.xu.pan.server.modules.file.converter.FileConverter;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.po.CreateFolderPO;
 import org.xu.pan.server.modules.file.po.DeleteFilePO;
+import org.xu.pan.server.modules.file.po.SecUploadFilePO;
 import org.xu.pan.server.modules.file.po.UpdateFilenamePO;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
@@ -114,6 +112,22 @@ public class FileController {
         context.setFileIdList(fileIdList);
         iUserFileService.deleteFile(context);
         return R.success();
+    }
+
+    @ApiOperation(
+            value = "文件秒传",
+            notes = "该接口提供了文件秒传的功能",
+            consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("file/sec-upload")
+    public R secUpload(@Validated @RequestBody SecUploadFilePO secUploadFilePO) {
+        SecUploadFileContext context = fileConverter.secUploadFilePO2SecUploadFileContext(secUploadFilePO);
+        boolean result = iUserFileService.secUpload(context);
+        if (result) {
+            return R.success();
+        }
+        return R.fail("文件唯一标识不存在，请手动执行文件上传");
     }
 
 
