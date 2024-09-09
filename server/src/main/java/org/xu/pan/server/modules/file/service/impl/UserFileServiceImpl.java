@@ -9,6 +9,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.transaction.annotation.Transactional;
 import org.xu.pan.core.constants.YPanConstants;
 import org.xu.pan.core.exception.YPanBusinessException;
 import org.xu.pan.core.utils.FileUtils;
@@ -16,6 +17,7 @@ import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.server.common.event.file.DeleteFileEvent;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.*;
+import org.xu.pan.server.modules.file.converter.FileConverter;
 import org.xu.pan.server.modules.file.entity.YPanFile;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
@@ -46,6 +48,9 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
 
     @Autowired
     private IFileService iFileService;
+
+    @Autowired
+    private FileConverter fileConverter;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -150,8 +155,41 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
         return false;
     }
 
+    /**
+     * 单文件上传
+     * <p>
+     * 1、上传文件并保存实体文件的记录
+     * 2、保存用户文件的关系记录
+     *
+     * @param context
+     */
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void upload(FileUploadContext context) {
+        saveFile(context);
+        saveUserFile(context.getParentId(),
+                context.getFilename(),
+                FolderFlagEnum.NO,
+                FileTypeEnum.getFileTypeCode(FileUtils.getFileSuffix(context.getFilename())),
+                context.getRecord().getFileId(),
+                context.getUserId(),
+                context.getRecord().getFileSizeDesc());
+    }
+
 
     /***************private*****************/
+
+    /**
+     * 上传文件并保存实体文件记录
+     * 委托给实体文件的Service去完成该操作
+     *
+     * @param context
+     */
+    private void saveFile(FileUploadContext context) {
+        FileSaveContext fileSaveContext = fileConverter.fileUploadContext2FileSaveContext(context);
+        iFileService.saveFile(fileSaveContext);
+        context.setRecord(fileSaveContext.getRecord());
+    }
 
     /**
      * 查询用户文件列表根据文件的唯一标识

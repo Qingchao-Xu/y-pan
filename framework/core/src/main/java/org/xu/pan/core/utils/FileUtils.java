@@ -100,7 +100,7 @@ public class FileUtils {
 
     /**
      * 将文件的输入流写入到文件中
-     * 使用底层的sendfile零拷贝来提高传输效率
+     * 使用底层的sendfile零拷贝来提高传输效率 !!!
      *
      * @param inputStream
      * @param targetFile
@@ -134,14 +134,14 @@ public class FileUtils {
     /**
      * 生成默认的文件存储路径
      * <p>
-     * 生成规则：当前登录用户的文件目录 + rpan
+     * 生成规则：当前登录用户的文件目录 + ypan
      *
      * @return
      */
     public static String generateDefaultStoreFileRealPath() {
         return new StringBuffer(System.getProperty("user.home"))
                 .append(File.separator)
-                .append("rpan")
+                .append("ypan")
                 .toString();
     }
 

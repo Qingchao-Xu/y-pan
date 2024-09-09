@@ -1,5 +1,6 @@
 package org.xu.pan.server.modules.file.service;
 
+import org.xu.pan.server.modules.file.context.FileSaveContext;
 import org.xu.pan.server.modules.file.context.QueryRealFileListContext;
 import org.xu.pan.server.modules.file.entity.YPanFile;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -20,4 +21,11 @@ public interface IFileService extends IService<YPanFile> {
      * @return
      */
     List<YPanFile> getFileList(QueryRealFileListContext context);
+
+    /**
+     * 上传单文件并保存实体记录
+     *
+     * @param context
+     */
+    void saveFile(FileSaveContext context);
 }

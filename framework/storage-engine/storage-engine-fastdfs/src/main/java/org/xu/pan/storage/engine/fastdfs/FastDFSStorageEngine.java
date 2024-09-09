@@ -4,6 +4,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.xu.pan.storage.engine.core.AbstractStorageEngine;
+import org.xu.pan.storage.engine.core.context.DeleteFileContext;
+import org.xu.pan.storage.engine.core.context.StoreFileContext;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -16,5 +18,13 @@ import java.util.List;
 public class FastDFSStorageEngine extends AbstractStorageEngine {
 
 
+    @Override
+    protected void doStore(StoreFileContext context) throws IOException {
 
+    }
+
+    @Override
+    protected void doDelete(DeleteFileContext context) throws IOException {
+
+    }
 }

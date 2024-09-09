@@ -59,4 +59,11 @@ public interface IUserFileService extends IService<YPanUserFile> {
      */
     boolean secUpload(SecUploadFileContext context);
 
+    /**
+     * 单文件上传
+     *
+     * @param context
+     */
+    void upload(FileUploadContext context);
+
 }

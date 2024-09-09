@@ -1,5 +1,6 @@
 package org.xu.pan.storage.engine.core;
 
+import org.xu.pan.storage.engine.core.context.*;
 
 import java.io.IOException;
 
@@ -10,6 +11,20 @@ import java.io.IOException;
  */
 public interface StorageEngine {
 
+    /**
+     * 存储物理文件
+     *
+     * @param context
+     * @throws IOException
+     */
+    void store(StoreFileContext context) throws IOException;
 
+    /**
+     * 删除物理文件
+     *
+     * @param context
+     * @throws IOException
+     */
+    void delete(DeleteFileContext context) throws IOException;
 
 }

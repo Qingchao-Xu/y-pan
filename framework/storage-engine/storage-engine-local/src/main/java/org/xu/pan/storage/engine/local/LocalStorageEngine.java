@@ -2,7 +2,11 @@ package org.xu.pan.storage.engine.local;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.xu.pan.core.utils.FileUtils;
 import org.xu.pan.storage.engine.core.AbstractStorageEngine;
+import org.xu.pan.storage.engine.core.context.DeleteFileContext;
+import org.xu.pan.storage.engine.core.context.StoreFileContext;
+import org.xu.pan.storage.engine.local.config.LocalStorageEngineConfig;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -16,5 +20,20 @@ import java.util.List;
 @Component
 public class LocalStorageEngine extends AbstractStorageEngine {
 
+    @Autowired
+    private LocalStorageEngineConfig config;
 
+
+    @Override
+    protected void doStore(StoreFileContext context) throws IOException {
+        String basePath = config.getRootFilePath();
+        String realFilePath = FileUtils.generateStoreFileRealPath(basePath, context.getFilename());
+        FileUtils.writeStream2File(context.getInputStream(), new File(realFilePath), context.getTotalSize());
+        context.setRealPath(realFilePath);
+    }
+
+    @Override
+    protected void doDelete(DeleteFileContext context) throws IOException {
+        FileUtils.deleteFiles(context.getRealFilePathList());
+    }
 }

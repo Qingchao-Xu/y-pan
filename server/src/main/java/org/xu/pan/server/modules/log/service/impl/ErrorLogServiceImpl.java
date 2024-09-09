@@ -2,7 +2,7 @@ package org.xu.pan.server.modules.log.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.xu.pan.server.modules.log.entity.YPanErrorLog;
-import org.xu.pan.server.modules.log.service.YPanErrorLogService;
+import org.xu.pan.server.modules.log.service.IErrorLogService;
 import org.xu.pan.server.modules.log.mapper.YPanErrorLogMapper;
 import org.springframework.stereotype.Service;
 
@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 * @createDate 2024-09-05 11:01:53
 */
 @Service
-public class YPanErrorLogServiceImpl extends ServiceImpl<YPanErrorLogMapper, YPanErrorLog>
-    implements YPanErrorLogService{
+public class ErrorLogServiceImpl extends ServiceImpl<YPanErrorLogMapper, YPanErrorLog>
+    implements IErrorLogService {
 
 }
 
