@@ -24,10 +24,7 @@ import org.xu.pan.server.modules.file.enums.MergeFlagEnum;
 import org.xu.pan.server.modules.file.service.IFileChunkService;
 import org.xu.pan.server.modules.file.service.IFileService;
 import org.xu.pan.server.modules.file.service.IUserFileService;
-import org.xu.pan.server.modules.file.vo.FileChunkUploadVO;
-import org.xu.pan.server.modules.file.vo.FolderTreeNodeVO;
-import org.xu.pan.server.modules.file.vo.UploadedChunksVO;
-import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
+import org.xu.pan.server.modules.file.vo.*;
 import org.xu.pan.server.modules.user.context.UserLoginContext;
 import org.xu.pan.server.modules.user.context.UserRegisterContext;
 import org.xu.pan.server.modules.user.service.IUserService;
@@ -588,6 +585,33 @@ public class FileTest {
         copyFileContext.setFileIdList(Lists.newArrayList(folder1));
         copyFileContext.setUserId(userId);
         iUserFileService.copy(copyFileContext);
+    }
+
+    /**
+     * 测试文件搜索成功
+     */
+    @Test
+    public void testSearchSuccess() {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-1");
+
+        Long folder1 = iUserFileService.createFolder(context);
+        Assert.notNull(folder1);
+
+        FileSearchContext fileSearchContext = new FileSearchContext();
+        fileSearchContext.setUserId(userId);
+        fileSearchContext.setKeyword("folder-name");
+        List<FileSearchResultVO> result = iUserFileService.search(fileSearchContext);
+        Assert.notEmpty(result);
+
+        fileSearchContext.setKeyword("name-1");
+        result = iUserFileService.search(fileSearchContext);
+        Assert.isTrue(CollectionUtils.isEmpty(result));
     }
 
     /************************************************private************************************************/

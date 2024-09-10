@@ -3,10 +3,7 @@ package org.xu.pan.server.modules.file.service;
 import org.xu.pan.server.modules.file.context.*;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.xu.pan.server.modules.file.vo.FileChunkUploadVO;
-import org.xu.pan.server.modules.file.vo.FolderTreeNodeVO;
-import org.xu.pan.server.modules.file.vo.UploadedChunksVO;
-import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
+import org.xu.pan.server.modules.file.vo.*;
 
 import java.util.List;
 
@@ -127,5 +124,13 @@ public interface IUserFileService extends IService<YPanUserFile> {
      * @param context
      */
     void copy(CopyFileContext context);
+
+    /**
+     * 文件列表搜索
+     *
+     * @param context
+     * @return
+     */
+    List<FileSearchResultVO> search(FileSearchContext context);
 
 }

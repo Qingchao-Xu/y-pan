@@ -1,9 +1,11 @@
 package org.xu.pan.server.modules.file.mapper;
 
 import org.apache.ibatis.annotations.Param;
+import org.xu.pan.server.modules.file.context.FileSearchContext;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.xu.pan.server.modules.file.vo.FileSearchResultVO;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 
 import java.util.List;
@@ -22,6 +24,13 @@ public interface YPanUserFileMapper extends BaseMapper<YPanUserFile> {
      * @return
      */
     List<YPanUserFileVO> selectFileList(@Param("param") QueryFileListContext context);
+
+    /**
+     * 文件搜索
+     * @param context
+     * @return
+     */
+    List<FileSearchResultVO> searchFile(@Param("param") FileSearchContext context);
 }
 
 
