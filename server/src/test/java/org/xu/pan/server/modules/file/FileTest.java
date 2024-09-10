@@ -18,9 +18,12 @@ import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.server.YPanServerLauncher;
 import org.xu.pan.server.modules.file.context.*;
 import org.xu.pan.server.modules.file.entity.YPanFile;
+import org.xu.pan.server.modules.file.entity.YPanFileChunk;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
+import org.xu.pan.server.modules.file.service.IFileChunkService;
 import org.xu.pan.server.modules.file.service.IFileService;
 import org.xu.pan.server.modules.file.service.IUserFileService;
+import org.xu.pan.server.modules.file.vo.UploadedChunksVO;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 import org.xu.pan.server.modules.user.context.UserLoginContext;
 import org.xu.pan.server.modules.user.context.UserRegisterContext;
@@ -47,6 +50,9 @@ public class FileTest {
 
     @Autowired
     private IFileService iFileService;
+
+    @Autowired
+    private IFileChunkService iFileChunkService;
 
     /**
      * 测试用户查询文件列表成功
@@ -375,6 +381,35 @@ public class FileTest {
         List<YPanUserFileVO> fileList = iUserFileService.getFileList(queryFileListContext);
         Assert.notEmpty(fileList);
         Assert.isTrue(fileList.size() == 1);
+    }
+
+    /**
+     * 测试查询用户已上传的文件分片信息列表成功
+     */
+    @Test
+    public void testQueryUploadedChunksSuccess() {
+        Long userId = register();
+
+        String identifier = "123456789";
+
+        YPanFileChunk record = new YPanFileChunk();
+        record.setId(IdUtil.get());
+        record.setIdentifier(identifier);
+        record.setRealPath("realPath");
+        record.setChunkNumber(1);
+        record.setExpirationTime(DateUtil.offsetDay(new Date(), 1));
+        record.setCreateUser(userId);
+        record.setCreateTime(new Date());
+        boolean save = iFileChunkService.save(record);
+        Assert.isTrue(save);
+
+        QueryUploadedChunksContext context = new QueryUploadedChunksContext();
+        context.setIdentifier(identifier);
+        context.setUserId(userId);
+
+        UploadedChunksVO vo = iUserFileService.getUploadedChunks(context);
+        Assert.notNull(vo);
+        Assert.notEmpty(vo.getUploadedChunks());
     }
 
     /************************************************private************************************************/

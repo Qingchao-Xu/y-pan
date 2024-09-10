@@ -18,6 +18,7 @@ import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.po.*;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.vo.FileChunkUploadVO;
+import org.xu.pan.server.modules.file.vo.UploadedChunksVO;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 
 import javax.servlet.http.HttpServletResponse;
@@ -150,6 +151,19 @@ public class FileController {
     public R<FileChunkUploadVO> chunkUpload(@Validated FileChunkUploadPO fileChunkUploadPO) {
         FileChunkUploadContext context = fileConverter.fileChunkUploadPO2FileChunkUploadContext(fileChunkUploadPO);
         FileChunkUploadVO vo = iUserFileService.chunkUpload(context);
+        return R.data(vo);
+    }
+
+    @ApiOperation(
+            value = "查询已经上传的文件分片列表",
+            notes = "该接口提供了查询已经上传的文件分片列表的功能",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("file/chunk-upload")
+    public R<UploadedChunksVO> getUploadedChunks(@Validated QueryUploadedChunksPO queryUploadedChunksPO) {
+        QueryUploadedChunksContext context = fileConverter.queryUploadedChunksPO2QueryUploadedChunksContext(queryUploadedChunksPO);
+        UploadedChunksVO vo = iUserFileService.getUploadedChunks(context);
         return R.data(vo);
     }
 
