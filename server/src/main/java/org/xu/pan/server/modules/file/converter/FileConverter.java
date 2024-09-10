@@ -1,9 +1,11 @@
 package org.xu.pan.server.modules.file.converter;
 
 import org.xu.pan.server.modules.file.context.*;
+import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import org.xu.pan.server.modules.file.po.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.xu.pan.server.modules.file.vo.FolderTreeNodeVO;
 import org.xu.pan.storage.engine.core.context.StoreFileChunkContext;
 
 /**
@@ -50,4 +52,9 @@ public interface FileConverter {
     FileChunkMergeContext fileChunkMergePO2FileChunkMergeContext(FileChunkMergePO fileChunkMergePO);
 
     FileChunkMergeAndSaveContext fileChunkMergeContext2FileChunkMergeAndSaveContext(FileChunkMergeContext context);
+
+    @Mapping(target = "label", source = "record.filename")
+    @Mapping(target = "id", source = "record.fileId")
+    @Mapping(target = "children", expression = "java(com.google.common.collect.Lists.newArrayList())")
+    FolderTreeNodeVO yPanUserFile2FolderTreeNodeVO(YPanUserFile record);
 }

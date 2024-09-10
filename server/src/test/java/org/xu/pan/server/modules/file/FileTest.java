@@ -25,6 +25,7 @@ import org.xu.pan.server.modules.file.service.IFileChunkService;
 import org.xu.pan.server.modules.file.service.IFileService;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.vo.FileChunkUploadVO;
+import org.xu.pan.server.modules.file.vo.FolderTreeNodeVO;
 import org.xu.pan.server.modules.file.vo.UploadedChunksVO;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 import org.xu.pan.server.modules.user.context.UserLoginContext;
@@ -427,6 +428,42 @@ public class FileTest {
             new ChunkUploader(countDownLatch, i + 1, 10, iUserFileService, userId, userInfoVO.getRootFileId()).start();
         }
         countDownLatch.await();
+    }
+
+    /**
+     * 测试文件夹树查询
+     */
+    @Test
+    public void getFolderTreeNodeVOListTest() {
+
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CreateFolderContext context = new CreateFolderContext();
+        context.setParentId(userInfoVO.getRootFileId());
+        context.setUserId(userId);
+        context.setFolderName("folder-name-1");
+
+        Long fileId = iUserFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        context.setFolderName("folder-name-2");
+
+        fileId = iUserFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        context.setFolderName("folder-name-2-1");
+        context.setParentId(fileId);
+
+        iUserFileService.createFolder(context);
+        Assert.notNull(fileId);
+
+        QueryFolderTreeContext queryFolderTreeContext = new QueryFolderTreeContext();
+        queryFolderTreeContext.setUserId(userId);
+        List<FolderTreeNodeVO> folderTree = iUserFileService.getFolderTree(queryFolderTreeContext);
+
+        Assert.isTrue(folderTree.size() == 1);
+        folderTree.stream().forEach(FolderTreeNodeVO::print);
     }
 
     /************************************************private************************************************/

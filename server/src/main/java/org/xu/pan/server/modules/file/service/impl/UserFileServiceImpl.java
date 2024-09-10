@@ -4,18 +4,21 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.google.common.collect.Lists;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.http.MediaType;
 import org.springframework.transaction.annotation.Transactional;
 import org.xu.pan.core.constants.YPanConstants;
 import org.xu.pan.core.exception.YPanBusinessException;
 import org.xu.pan.core.utils.FileUtils;
 import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.server.common.event.file.DeleteFileEvent;
+import org.xu.pan.server.common.utils.HttpUtil;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.*;
 import org.xu.pan.server.modules.file.converter.FileConverter;
@@ -30,13 +33,16 @@ import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.mapper.YPanUserFileMapper;
 import org.springframework.stereotype.Service;
 import org.xu.pan.server.modules.file.vo.FileChunkUploadVO;
+import org.xu.pan.server.modules.file.vo.FolderTreeNodeVO;
 import org.xu.pan.server.modules.file.vo.UploadedChunksVO;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
+import org.xu.pan.storage.engine.core.StorageEngine;
+import org.xu.pan.storage.engine.core.context.ReadFileContext;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -58,6 +64,9 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
 
     @Autowired
     private IFileChunkService iFileChunkService;
+
+    @Autowired
+    private StorageEngine storageEngine;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -247,8 +256,215 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
                 context.getRecord().getFileSizeDesc());
     }
 
+    /**
+     * 文件下载
+     * <p>
+     * 1、参数校验：校验文件是否存在，文件是否属于该用户
+     * 2、校验该文件是不是一个文件夹
+     * 3、执行下载的动作
+     *
+     * @param context
+     */
+    @Override
+    public void download(FileDownloadContext context) {
+        YPanUserFile record = getById(context.getFileId());
+        checkOperatePermission(record, context.getUserId());
+        if (checkIsFolder(record)) {
+            throw new YPanBusinessException("文件夹暂不支持下载");
+        }
+        doDownload(record, context.getResponse());
+    }
+
+    /**
+     * 文件预览
+     * 1、参数校验：校验文件是否存在，文件是否属于该用户
+     * 2、校验该文件是不是一个文件夹
+     * 3、执行预览的动作
+     *
+     * @param context
+     */
+    @Override
+    public void preview(FilePreviewContext context) {
+        YPanUserFile record = getById(context.getFileId());
+        checkOperatePermission(record, context.getUserId());
+        if (checkIsFolder(record)) {
+            throw new YPanBusinessException("文件夹暂不支持预览");
+        }
+        doPreview(record, context.getResponse());
+    }
+
+    /**
+     * 查询用户的文件夹树
+     * <p>
+     * 1、查询出该用户的所有文件夹列表
+     * 2、在内存中拼装文件夹树
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public List<FolderTreeNodeVO> getFolderTree(QueryFolderTreeContext context) {
+        List<YPanUserFile> folderRecords = queryFolderRecords(context.getUserId());
+        List<FolderTreeNodeVO> result = assembleFolderTreeNodeVOList(folderRecords);
+        return result;
+    }
+
 
     /***************private*****************/
+
+    /**
+     * 拼装文件夹树列表
+     *
+     * @param folderRecords
+     * @return
+     */
+    private List<FolderTreeNodeVO> assembleFolderTreeNodeVOList(List<YPanUserFile> folderRecords) {
+        if (CollectionUtils.isEmpty(folderRecords)) {
+            return Lists.newArrayList();
+        }
+        List<FolderTreeNodeVO> mappedFolderTreeNodeVOList = folderRecords.stream().map(fileConverter::yPanUserFile2FolderTreeNodeVO).collect(Collectors.toList());
+        Map<Long, List<FolderTreeNodeVO>> mappedFolderTreeNodeVOMap = mappedFolderTreeNodeVOList.stream().collect(Collectors.groupingBy(FolderTreeNodeVO::getParentId));
+        for (FolderTreeNodeVO node : mappedFolderTreeNodeVOList) {
+            List<FolderTreeNodeVO> children = mappedFolderTreeNodeVOMap.get(node.getId());
+            if (CollectionUtils.isNotEmpty(children)) {
+                node.getChildren().addAll(children);
+            }
+        }
+        return mappedFolderTreeNodeVOList.stream().filter(node -> Objects.equals(node.getParentId(), FileConstants.TOP_PARENT_ID)).collect(Collectors.toList());
+    }
+
+    /**
+     * 查询用户所有有效的文件夹信息
+     *
+     * @param userId
+     * @return
+     */
+    private List<YPanUserFile> queryFolderRecords(Long userId) {
+        QueryWrapper queryWrapper = Wrappers.query();
+        queryWrapper.eq("user_id", userId);
+        queryWrapper.eq("folder_flag", FolderFlagEnum.YES.getCode());
+        queryWrapper.eq("del_flag", DelFlagEnum.NO.getCode());
+        return list(queryWrapper);
+    }
+
+    /**
+     * 执行文件预览的动作
+     * 1、查询文件的真实存储路径
+     * 2、添加跨域的公共响应头
+     * 3、委托文件存储引擎去读取文件内容到响应的输出流中
+     *
+     * @param record
+     * @param response
+     */
+    private void doPreview(YPanUserFile record, HttpServletResponse response) {
+        YPanFile realFileRecord = iFileService.getById(record.getRealFileId());
+        if (Objects.isNull(realFileRecord)) {
+            throw new YPanBusinessException("当前的文件记录不存在");
+        }
+        addCommonResponseHeader(response, realFileRecord.getFilePreviewContentType());
+        realFile2OutputStream(realFileRecord.getRealPath(), response);
+    }
+
+    /**
+     * 执行文件下载的动作
+     * <p>
+     * 1、查询文件的真实存储路径
+     * 2、添加跨域的公共响应头
+     * 3、拼装下载文件的名称、长度等等响应信息
+     * 4、委托文件存储引擎去读取文件内容到响应的输出流中
+     *
+     * @param record
+     * @param response
+     */
+    private void doDownload(YPanUserFile record, HttpServletResponse response) {
+        YPanFile realFileRecord = iFileService.getById(record.getRealFileId());
+        if (Objects.isNull(realFileRecord)) {
+            throw new YPanBusinessException("当前的文件记录不存在");
+        }
+        addCommonResponseHeader(response, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+        addDownloadAttribute(response, record, realFileRecord);
+        realFile2OutputStream(realFileRecord.getRealPath(), response);
+    }
+
+    /**
+     * 委托文件存储引擎去读取文件内容并写入到输出流中
+     *
+     * @param realPath
+     * @param response
+     */
+    private void realFile2OutputStream(String realPath, HttpServletResponse response) {
+        try {
+            ReadFileContext context = new ReadFileContext();
+            context.setRealPath(realPath);
+            context.setOutputStream(response.getOutputStream());
+            storageEngine.readFile(context);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new YPanBusinessException("文件下载失败");
+        }
+    }
+
+    /**
+     * 添加文件下载的属性信息
+     *
+     * @param response
+     * @param record
+     * @param realFileRecord
+     */
+    private void addDownloadAttribute(HttpServletResponse response, YPanUserFile record, YPanFile realFileRecord) {
+        try {
+            response.addHeader(FileConstants.CONTENT_DISPOSITION_STR,
+                    FileConstants.CONTENT_DISPOSITION_VALUE_PREFIX_STR + new String(record.getFilename().getBytes(FileConstants.GB2312_STR), FileConstants.IOS_8859_1_STR));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+            throw new YPanBusinessException("文件下载失败");
+        }
+        response.setContentLengthLong(Long.valueOf(realFileRecord.getFileSize()));
+    }
+
+    /**
+     * 添加公共的文件读取响应头
+     *
+     * @param response
+     * @param contentTypeValue
+     */
+    private void addCommonResponseHeader(HttpServletResponse response, String contentTypeValue) {
+        response.reset();
+        HttpUtil.addCorsResponseHeaders(response);
+        response.addHeader(FileConstants.CONTENT_TYPE_STR, contentTypeValue);
+        response.setContentType(contentTypeValue);
+    }
+
+    /**
+     * 校验用户的操作权限
+     * <p>
+     * 1、文件记录必须存在
+     * 2、文件记录的创建者必须是该登录用户
+     *
+     * @param record
+     * @param userId
+     */
+    private void checkOperatePermission(YPanUserFile record, Long userId) {
+        if (Objects.isNull(record)) {
+            throw new YPanBusinessException("当前文件记录不存在");
+        }
+        if (!record.getUserId().equals(userId)) {
+            throw new YPanBusinessException("您没有该文件的操作权限");
+        }
+    }
+
+    /**
+     * 检查当前文件记录是不是一个文件夹
+     *
+     * @param record
+     * @return
+     */
+    private boolean checkIsFolder(YPanUserFile record) {
+        if (Objects.isNull(record)) {
+            throw new YPanBusinessException("当前文件记录不存在");
+        }
+        return FolderFlagEnum.YES.getCode().equals(record.getFolderFlag());
+    }
 
     /**
      * 合并文件分片并保存物理文件记录
