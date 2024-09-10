@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 import org.xu.pan.core.utils.FileUtils;
 import org.xu.pan.storage.engine.core.AbstractStorageEngine;
 import org.xu.pan.storage.engine.core.context.DeleteFileContext;
+import org.xu.pan.storage.engine.core.context.MergeFileContext;
 import org.xu.pan.storage.engine.core.context.StoreFileChunkContext;
 import org.xu.pan.storage.engine.core.context.StoreFileContext;
 import org.xu.pan.storage.engine.local.config.LocalStorageEngineConfig;
@@ -43,6 +44,19 @@ public class LocalStorageEngine extends AbstractStorageEngine {
         String basePath = config.getRootFileChunkPath();
         String realFilePath = FileUtils.generateStoreFileChunkRealPath(basePath, context.getIdentifier(), context.getChunkNumber());
         FileUtils.writeStream2File(context.getInputStream(), new File(realFilePath), context.getTotalSize());
+        context.setRealPath(realFilePath);
+    }
+
+    @Override
+    protected void doMergeFile(MergeFileContext context) throws IOException {
+        String basePath = config.getRootFilePath();
+        String realFilePath = FileUtils.generateStoreFileRealPath(basePath, context.getFilename());
+        FileUtils.createFile(new File(realFilePath));
+        List<String> chunkPaths = context.getRealPathList();
+        for (String chunkPath : chunkPaths) {
+            FileUtils.appendWrite(Paths.get(realFilePath), new File(chunkPath).toPath());
+        }
+        FileUtils.deleteFiles(chunkPaths);
         context.setRealPath(realFilePath);
     }
 }

@@ -1,5 +1,6 @@
 package org.xu.pan.server.modules.file.service;
 
+import org.xu.pan.server.modules.file.context.FileChunkMergeAndSaveContext;
 import org.xu.pan.server.modules.file.context.FileSaveContext;
 import org.xu.pan.server.modules.file.context.QueryRealFileListContext;
 import org.xu.pan.server.modules.file.entity.YPanFile;
@@ -28,4 +29,12 @@ public interface IFileService extends IService<YPanFile> {
      * @param context
      */
     void saveFile(FileSaveContext context);
+
+    /**
+     * 合并物理文件并保存物理文件记录
+     *
+     * @param context
+     */
+    void mergeFileChunkAndSaveFile(FileChunkMergeAndSaveContext context);
+
 }

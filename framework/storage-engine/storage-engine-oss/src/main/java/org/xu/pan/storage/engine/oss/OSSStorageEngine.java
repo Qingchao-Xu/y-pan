@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.xu.pan.storage.engine.core.AbstractStorageEngine;
 import org.xu.pan.storage.engine.core.context.DeleteFileContext;
+import org.xu.pan.storage.engine.core.context.MergeFileContext;
 import org.xu.pan.storage.engine.core.context.StoreFileChunkContext;
 import org.xu.pan.storage.engine.core.context.StoreFileContext;
 
@@ -40,6 +41,11 @@ public class OSSStorageEngine extends AbstractStorageEngine {
 
     @Override
     protected void doStoreChunk(StoreFileChunkContext context) throws IOException {
+
+    }
+
+    @Override
+    protected void doMergeFile(MergeFileContext context) throws IOException {
 
     }
 }

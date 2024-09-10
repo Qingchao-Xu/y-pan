@@ -20,9 +20,11 @@ import org.xu.pan.server.modules.file.context.*;
 import org.xu.pan.server.modules.file.entity.YPanFile;
 import org.xu.pan.server.modules.file.entity.YPanFileChunk;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
+import org.xu.pan.server.modules.file.enums.MergeFlagEnum;
 import org.xu.pan.server.modules.file.service.IFileChunkService;
 import org.xu.pan.server.modules.file.service.IFileService;
 import org.xu.pan.server.modules.file.service.IUserFileService;
+import org.xu.pan.server.modules.file.vo.FileChunkUploadVO;
 import org.xu.pan.server.modules.file.vo.UploadedChunksVO;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 import org.xu.pan.server.modules.user.context.UserLoginContext;
@@ -412,7 +414,84 @@ public class FileTest {
         Assert.notEmpty(vo.getUploadedChunks());
     }
 
+    /**
+     * 测试文件分片上传成功
+     */
+    @Test
+    public void uploadWithChunkTest() throws InterruptedException {
+        Long userId = register();
+        UserInfoVO userInfoVO = info(userId);
+
+        CountDownLatch countDownLatch = new CountDownLatch(10);
+        for (int i = 0; i < 10; i++) {
+            new ChunkUploader(countDownLatch, i + 1, 10, iUserFileService, userId, userInfoVO.getRootFileId()).start();
+        }
+        countDownLatch.await();
+    }
+
     /************************************************private************************************************/
+
+    /**
+     * 文件分片上传器
+     */
+    @AllArgsConstructor
+    private static class ChunkUploader extends Thread {
+
+        private CountDownLatch countDownLatch;
+
+        private Integer chunk;
+
+        private Integer chunks;
+
+        private IUserFileService iUserFileService;
+
+        private Long userId;
+
+        private Long parentId;
+
+        /**
+         * 1、上传文件分片
+         * 2、根据上传的结果来调用文件分片合并
+         */
+        @Override
+        public void run() {
+            super.run();
+            MultipartFile file = genarateMultipartFile();
+            Long totalSize = file.getSize() * chunks;
+            String filename = "test.txt";
+            String identifier = "123456789";
+
+            FileChunkUploadContext fileChunkUploadContext = new FileChunkUploadContext();
+            fileChunkUploadContext.setFilename(filename);
+            fileChunkUploadContext.setIdentifier(identifier);
+            fileChunkUploadContext.setTotalChunks(chunks);
+            fileChunkUploadContext.setChunkNumber(chunk);
+            fileChunkUploadContext.setCurrentChunkSize(file.getSize());
+            fileChunkUploadContext.setTotalSize(totalSize);
+            fileChunkUploadContext.setFile(file);
+            fileChunkUploadContext.setUserId(userId);
+
+            FileChunkUploadVO fileChunkUploadVO = iUserFileService.chunkUpload(fileChunkUploadContext);
+
+            if (fileChunkUploadVO.getMergeFlag().equals(MergeFlagEnum.READY.getCode())) {
+                System.out.println("分片 " + chunk + " 检测到可以合并分片");
+
+                FileChunkMergeContext fileChunkMergeContext = new FileChunkMergeContext();
+                fileChunkMergeContext.setFilename(filename);
+                fileChunkMergeContext.setIdentifier(identifier);
+                fileChunkMergeContext.setTotalSize(totalSize);
+                fileChunkMergeContext.setParentId(parentId);
+                fileChunkMergeContext.setUserId(userId);
+
+                iUserFileService.mergeFile(fileChunkMergeContext);
+                countDownLatch.countDown();
+            } else {
+                countDownLatch.countDown();
+            }
+
+        }
+
+    }
 
     /**
      * 生成模拟的网络文件实体

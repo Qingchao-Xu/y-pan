@@ -138,4 +138,39 @@ public abstract class AbstractStorageEngine implements StorageEngine {
         Assert.notNull(context.getUserId(), "当前登录用户的ID不能为空");
     }
 
+    /**
+     * 合并文件分片
+     * <p>
+     * 1、检查参数
+     * 2、执行动作
+     *
+     * @param context
+     * @throws IOException
+     */
+    @Override
+    public void mergeFile(MergeFileContext context) throws IOException {
+        checkMergeFileContext(context);
+        doMergeFile(context);
+    }
+
+    /**
+     * 执行文件分片的动作
+     * 下沉到子类实现
+     *
+     * @param context
+     */
+    protected abstract void doMergeFile(MergeFileContext context) throws IOException;
+
+    /**
+     * 检查文件分片合并的上线文实体信息
+     *
+     * @param context
+     */
+    private void checkMergeFileContext(MergeFileContext context) {
+        Assert.notBlank(context.getFilename(), "文件名称不能为空");
+        Assert.notBlank(context.getIdentifier(), "文件唯一标识不能为空");
+        Assert.notNull(context.getUserId(), "当前登录用户的ID不能为空");
+        Assert.notEmpty(context.getRealPathList(), "文件分片列表不能为空");
+    }
+
 }
