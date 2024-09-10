@@ -121,4 +121,11 @@ public interface IUserFileService extends IService<YPanUserFile> {
      */
     void transfer(TransferFileContext context);
 
+    /**
+     * 文件复制
+     *
+     * @param context
+     */
+    void copy(CopyFileContext context);
+
 }
