@@ -4,6 +4,7 @@ import org.xu.pan.server.modules.file.context.*;
 import org.xu.pan.server.modules.file.po.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.xu.pan.storage.engine.core.context.StoreFileChunkContext;
 
 /**
  * 文件模块实体转化工具类
@@ -32,4 +33,12 @@ public interface FileConverter {
 
     @Mapping(target = "record", ignore = true)
     FileSaveContext fileUploadContext2FileSaveContext(FileUploadContext context);
+
+    @Mapping(target = "userId", expression = "java(org.xu.pan.server.common.utils.UserIdUtil.get())")
+    FileChunkUploadContext fileChunkUploadPO2FileChunkUploadContext(FileChunkUploadPO fileChunkUploadPO);
+
+    FileChunkSaveContext fileChunkUploadContext2FileChunkSaveContext(FileChunkUploadContext context);
+
+    @Mapping(target = "realPath", ignore = true)
+    StoreFileChunkContext fileChunkSaveContext2StoreFileChunkContext(FileChunkSaveContext context);
 }

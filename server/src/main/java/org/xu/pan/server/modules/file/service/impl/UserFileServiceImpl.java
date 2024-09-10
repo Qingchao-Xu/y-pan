@@ -23,10 +23,12 @@ import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.enums.FileTypeEnum;
 import org.xu.pan.server.modules.file.enums.FolderFlagEnum;
+import org.xu.pan.server.modules.file.service.IFileChunkService;
 import org.xu.pan.server.modules.file.service.IFileService;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.mapper.YPanUserFileMapper;
 import org.springframework.stereotype.Service;
+import org.xu.pan.server.modules.file.vo.FileChunkUploadVO;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 
 import java.util.Date;
@@ -51,6 +53,9 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
 
     @Autowired
     private FileConverter fileConverter;
+
+    @Autowired
+    private IFileChunkService iFileChunkService;
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
@@ -174,6 +179,25 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
                 context.getRecord().getFileId(),
                 context.getUserId(),
                 context.getRecord().getFileSizeDesc());
+    }
+
+    /**
+     * 文件分片上传
+     * <p>
+     * 1、上传实体文件
+     * 2、保存分片文件记录
+     * 3、校验是否全部分片上传完成
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public FileChunkUploadVO chunkUpload(FileChunkUploadContext context) {
+        FileChunkSaveContext fileChunkSaveContext = fileConverter.fileChunkUploadContext2FileChunkSaveContext(context);
+        iFileChunkService.saveChunkFile(fileChunkSaveContext);
+        FileChunkUploadVO vo = new FileChunkUploadVO();
+        vo.setMergeFlag(fileChunkSaveContext.getMergeFlagEnum().getCode());
+        return vo;
     }
 
 

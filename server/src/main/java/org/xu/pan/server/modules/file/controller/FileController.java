@@ -17,6 +17,7 @@ import org.xu.pan.server.modules.file.converter.FileConverter;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.po.*;
 import org.xu.pan.server.modules.file.service.IUserFileService;
+import org.xu.pan.server.modules.file.vo.FileChunkUploadVO;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 
 import javax.servlet.http.HttpServletResponse;
@@ -137,6 +138,19 @@ public class FileController {
         FileUploadContext context = fileConverter.fileUploadPO2FileUploadContext(fileUploadPO);
         iUserFileService.upload(context);
         return R.success();
+    }
+
+    @ApiOperation(
+            value = "文件分片上传",
+            notes = "该接口提供了文件分片上传的功能",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @PostMapping("file/chunk-upload")
+    public R<FileChunkUploadVO> chunkUpload(@Validated FileChunkUploadPO fileChunkUploadPO) {
+        FileChunkUploadContext context = fileConverter.fileChunkUploadPO2FileChunkUploadContext(fileChunkUploadPO);
+        FileChunkUploadVO vo = iUserFileService.chunkUpload(context);
+        return R.data(vo);
     }
 
 

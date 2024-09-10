@@ -3,6 +3,7 @@ package org.xu.pan.server.modules.file.service;
 import org.xu.pan.server.modules.file.context.*;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.xu.pan.server.modules.file.vo.FileChunkUploadVO;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 
 import java.util.List;
@@ -65,5 +66,13 @@ public interface IUserFileService extends IService<YPanUserFile> {
      * @param context
      */
     void upload(FileUploadContext context);
+
+    /**
+     * 文件分片上传
+     *
+     * @param context
+     * @return
+     */
+    FileChunkUploadVO chunkUpload(FileChunkUploadContext context);
 
 }

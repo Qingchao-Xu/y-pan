@@ -10,7 +10,6 @@
       "name": "org.xu.pan.storage.engine.local.root-file-chunk-path",
       "type": "java.lang.String",
       "description": "文件分片上传的根目录",
-      "description": "文件分片上传的根目录",
       "defaultValue": "@see org.xu.pan.core.utils.FileUtils.generateDefaultStoreFileChunkRealPath"
     }
   ]

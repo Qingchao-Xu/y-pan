@@ -27,4 +27,12 @@ public interface StorageEngine {
      */
     void delete(DeleteFileContext context) throws IOException;
 
+    /**
+     * 存储物理文件的分片
+     *
+     * @param context
+     * @throws IOException
+     */
+    void storeChunk(StoreFileChunkContext context) throws IOException;
+
 }
