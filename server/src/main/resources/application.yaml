@@ -56,9 +56,15 @@ org:
     pan:
       storage:
         engine:
-          fdfs:
-            connect-timeout: 600
-            tracker-list:
-              - 39.98.37.93:22122
-            group: group1
+          oss:
+            bucket-name: y-pan-test
+            endpoint: oss-cn-beijing.aliyuncs.com
+            access-key-id:
+            access-key-secret:
+            auto-create-bucket: true
+#          fdfs:
+#            connect-timeout: 600
+#            tracker-list:
+#              - 39.98.37.93:22122
+#            group: group1
 
