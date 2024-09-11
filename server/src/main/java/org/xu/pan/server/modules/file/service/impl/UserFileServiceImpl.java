@@ -274,6 +274,23 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
     }
 
     /**
+     * 文件下载 不校验用户是否是否是上传用户
+     *
+     * @param context
+     */
+    @Override
+    public void downloadWithoutCheckUser(FileDownloadContext context) {
+        YPanUserFile record = getById(context.getFileId());
+        if (Objects.isNull(record)) {
+            throw new YPanBusinessException("当前文件记录不存在");
+        }
+        if (checkIsFolder(record)) {
+            throw new YPanBusinessException("文件夹暂不支持下载");
+        }
+        doDownload(record, context.getResponse());
+    }
+
+    /**
      * 文件预览
      * 1、参数校验：校验文件是否存在，文件是否属于该用户
      * 2、校验该文件是不是一个文件夹
@@ -371,6 +388,38 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
         }
         records.stream().forEach(record -> doFindAllChildRecords(result, record));
         return result;
+    }
+
+    /**
+     * 递归查询所有的子文件信息
+     *
+     * @param fileIdList
+     * @return
+     */
+    @Override
+    public List<YPanUserFile> findAllFileRecordsByFileIdList(List<Long> fileIdList) {
+        if (CollectionUtils.isEmpty(fileIdList)) {
+            return Lists.newArrayList();
+        }
+        List<YPanUserFile> records = listByIds(fileIdList);
+        if (CollectionUtils.isEmpty(records)) {
+            return Lists.newArrayList();
+        }
+        return findAllFileRecords(records);
+    }
+
+    /**
+     * 实体转换
+     *
+     * @param records
+     * @return
+     */
+    @Override
+    public List<YPanUserFileVO> transferVOList(List<YPanUserFile> records) {
+        if (CollectionUtils.isEmpty(records)) {
+            return Lists.newArrayList();
+        }
+        return records.stream().map(fileConverter::yPanUserFile2RPanUserFileVO).collect(Collectors.toList());
     }
 
 

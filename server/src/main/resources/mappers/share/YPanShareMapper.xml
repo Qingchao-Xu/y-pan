@@ -24,4 +24,20 @@
         share_url,share_code,share_status,
         create_user,create_time
     </sql>
+
+    <select id="selectShareVOListByUserId" resultType="org.xu.pan.server.modules.share.vo.YPanShareUrlListVO">
+        SELECT share_id       AS shareId,
+               share_name     AS shareName,
+               share_type     AS shareType,
+               share_day_type AS shareDayType,
+               share_end_time AS shareEndTime,
+               share_url      AS shareUrl,
+               share_code     AS shareCode,
+               share_status   AS shareStatus,
+               create_time    AS createTime
+        FROM
+            y_pan_share
+        WHERE
+            create_user = #{userId}
+    </select>
 </mapper>

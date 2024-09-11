@@ -13,6 +13,8 @@ import org.xu.pan.core.exception.YPanBusinessException;
 import org.xu.pan.server.YPanServerLauncher;
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
 import org.xu.pan.server.modules.file.context.DeleteFileContext;
+import org.xu.pan.server.modules.file.context.QueryFileListContext;
+import org.xu.pan.server.modules.file.enums.DelFlagEnum;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 import org.xu.pan.server.modules.recycle.context.DeleteContext;
@@ -93,6 +95,15 @@ public class RecycleTest {
         Long fileId = iUserFileService.createFolder(context);
         Assert.notNull(fileId);
 
+        // 创建其子文件夹
+        CreateFolderContext context2 = new CreateFolderContext();
+        context2.setParentId(fileId);
+        context2.setUserId(userId);
+        context2.setFolderName("folder-name-old2");
+
+        Long fileId2 = iUserFileService.createFolder(context2);
+        Assert.notNull(fileId2);
+
         // 删掉该文件夹
         DeleteFileContext deleteFileContext = new DeleteFileContext();
         List<Long> fileIdList = Lists.newArrayList();
@@ -101,11 +112,21 @@ public class RecycleTest {
         deleteFileContext.setUserId(userId);
         iUserFileService.deleteFile(deleteFileContext);
 
+        // 查询文件列表，校验列表的长度为1, 说明删除了父文件夹，子文件夹也没有被删除，后面如何解决呢
+        QueryFileListContext queryFileListContext = new QueryFileListContext();
+        queryFileListContext.setParentId(fileId);
+        queryFileListContext.setUserId(userId);
+        queryFileListContext.setFileTypeArray(null);
+        queryFileListContext.setDelFlag(DelFlagEnum.NO.getCode());
+        List<YPanUserFileVO> result = iUserFileService.getFileList(queryFileListContext);
+        System.out.println(result.size());
+
         // 文件还原
         RestoreContext restoreContext = new RestoreContext();
         restoreContext.setUserId(userId);
         restoreContext.setFileIdList(Lists.newArrayList(fileId));
         iRecycleService.restore(restoreContext);
+
     }
 
     /**

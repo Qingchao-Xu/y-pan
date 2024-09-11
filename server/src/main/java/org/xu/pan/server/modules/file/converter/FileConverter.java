@@ -6,6 +6,7 @@ import org.xu.pan.server.modules.file.po.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.xu.pan.server.modules.file.vo.FolderTreeNodeVO;
+import org.xu.pan.server.modules.file.vo.YPanUserFileVO;
 import org.xu.pan.storage.engine.core.context.StoreFileChunkContext;
 
 /**
@@ -57,4 +58,6 @@ public interface FileConverter {
     @Mapping(target = "id", source = "record.fileId")
     @Mapping(target = "children", expression = "java(com.google.common.collect.Lists.newArrayList())")
     FolderTreeNodeVO yPanUserFile2FolderTreeNodeVO(YPanUserFile record);
+
+    YPanUserFileVO yPanUserFile2RPanUserFileVO(YPanUserFile record);
 }

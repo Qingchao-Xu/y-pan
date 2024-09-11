@@ -1,7 +1,11 @@
 package org.xu.pan.server.modules.share.mapper;
 
+import org.apache.ibatis.annotations.Param;
 import org.xu.pan.server.modules.share.entity.YPanShare;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.xu.pan.server.modules.share.vo.YPanShareUrlListVO;
+
+import java.util.List;
 
 /**
 * @author 23561
@@ -11,6 +15,12 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 */
 public interface YPanShareMapper extends BaseMapper<YPanShare> {
 
+    /**
+     * 查询用户的分享列表
+     * @param userId
+     * @return
+     */
+    List<YPanShareUrlListVO> selectShareVOListByUserId(@Param("userId") Long userId);
 }
 
 

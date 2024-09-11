@@ -97,6 +97,13 @@ public interface IUserFileService extends IService<YPanUserFile> {
     void download(FileDownloadContext context);
 
     /**
+     * 文件下载 不校验用户是否是否是上传用户
+     *
+     * @param context
+     */
+    void downloadWithoutCheckUser(FileDownloadContext context);
+
+    /**
      * 文件预览
      *
      * @param context
@@ -139,4 +146,20 @@ public interface IUserFileService extends IService<YPanUserFile> {
      * @return
      */
     List<YPanUserFile> findAllFileRecords(List<YPanUserFile> records);
+
+    /**
+     * 递归查询所有的子文件信息
+     *
+     * @param fileIdList
+     * @return
+     */
+    List<YPanUserFile> findAllFileRecordsByFileIdList(List<Long> fileIdList);
+
+    /**
+     * 实体转换
+     *
+     * @param records
+     * @return
+     */
+    List<YPanUserFileVO> transferVOList(List<YPanUserFile> records);
 }
