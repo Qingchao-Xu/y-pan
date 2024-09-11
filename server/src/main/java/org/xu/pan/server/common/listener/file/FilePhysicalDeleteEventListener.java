@@ -59,7 +59,7 @@ public class FilePhysicalDeleteEventListener implements ApplicationContextAware 
      *
      * @param event
      */
-    @EventListener(classes = FilePhysicalDeleteEvent.class)
+    @EventListener(classes = FilePhysicalDeleteEvent.class)  // TransactionalEventListener 和 EventListener 有什么区别
     @Async(value = "eventListenerTaskExecutor")
     public void physicalDeleteFile(FilePhysicalDeleteEvent event) {
         List<YPanUserFile> allRecords = event.getAllRecords();
