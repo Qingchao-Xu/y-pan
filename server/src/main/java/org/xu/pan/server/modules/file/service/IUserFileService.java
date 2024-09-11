@@ -133,4 +133,10 @@ public interface IUserFileService extends IService<YPanUserFile> {
      */
     List<FileSearchResultVO> search(FileSearchContext context);
 
+    /**
+     * 递归查询所有子文件信息
+     * @param records
+     * @return
+     */
+    List<YPanUserFile> findAllFileRecords(List<YPanUserFile> records);
 }
