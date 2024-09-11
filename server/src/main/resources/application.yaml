@@ -51,3 +51,14 @@ logging:
   level:
     root: INFO
 
+org:
+  xu:
+    pan:
+      storage:
+        engine:
+          fdfs:
+            connect-timeout: 600
+            tracker-list:
+              - 39.98.37.93:22122
+            group: group1
+
