@@ -5,27 +5,29 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.xu.pan</groupId>
-        <artifactId>y-pan-parent</artifactId>
+        <artifactId>y-pan-bloom-filter</artifactId>
         <version>1.0</version>
     </parent>
 
-    <artifactId>y-pan-framework</artifactId>
-    <packaging>pom</packaging>
-    <modules>
-        <module>core</module>
-        <module>web</module>
-        <module>swagger2</module>
-        <module>orm</module>
-        <module>cache</module>
-        <module>schedule</module>
-        <module>storage-engine</module>
-        <module>bloom-filter</module>
-    </modules>
+    <artifactId>y-pan-bloom-filter-local</artifactId>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.xu.pan</groupId>
+            <artifactId>y-pan-bloom-filter-core</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
 
 </project>
