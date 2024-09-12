@@ -76,6 +76,11 @@
 <!--            <artifactId>y-pan-storage-engine-oss</artifactId>-->
 <!--            <version>1.0</version>-->
 <!--        </dependency>-->
+        <dependency>
+            <groupId>org.xu.pan</groupId>
+            <artifactId>y-pan-bloom-filter-local</artifactId>
+            <version>1.0</version>
+        </dependency>
     </dependencies>
 
     <build>

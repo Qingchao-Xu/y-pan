@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.util.Sets;
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.annotation.Transactional;
+import org.xu.pan.bloom.filter.core.BloomFilter;
+import org.xu.pan.bloom.filter.core.BloomFilterManager;
 import org.xu.pan.core.constants.YPanConstants;
 import org.xu.pan.core.exception.YPanBusinessException;
 import org.xu.pan.core.response.ResponseCode;
@@ -54,6 +57,7 @@ import java.util.stream.Collectors;
 * @createDate 2024-09-05 11:02:39
 */
 @Service
+@Slf4j
 public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
     implements IShareService {
 
@@ -72,6 +76,11 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
     @Autowired
     @Qualifier(value = "shareManualCacheService")
     private ManualCacheService<YPanShare> cacheService;
+
+    @Autowired
+    private BloomFilterManager manager;
+
+    private static final String BLOOM_FILTER_NAME = "SHARE_SIMPLE_DETAIL";
 
     private ApplicationContext applicationContext;
 
@@ -94,7 +103,9 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
     public YPanShareUrlVO create(CreateShareUrlContext context) {
         saveShare(context);
         saveShareFiles(context);
-        return assembleShareVO(context);
+        YPanShareUrlVO vo = assembleShareVO(context);
+        afterCreate(context, vo);
+        return vo;
     }
 
     /**
@@ -261,6 +272,17 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
         shareIdSet.stream().forEach(this::refreshOneShareStatus);
     }
 
+    /**
+     * 滚动查询已存在的分享ID
+     * @param startId
+     * @param limit
+     * @return
+     */
+    @Override
+    public List<Long> rollingQueryShareId(long startId, long limit) {
+        return baseMapper.rollingQueryShareId(startId, limit);
+    }
+
     @Override
     public boolean removeById(Serializable id) {
         return cacheService.removeById(id);
@@ -296,6 +318,19 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
     }
 
     /***********private*************/
+
+    /**
+     * 创建分享链接后置处理
+     * @param context
+     * @param vo
+     */
+    private void afterCreate(CreateShareUrlContext context, YPanShareUrlVO vo) {
+        BloomFilter<Long> bloomFilter = manager.getFilter(BLOOM_FILTER_NAME);
+        if (Objects.nonNull(bloomFilter)) {
+            bloomFilter.put(context.getRecord().getShareId());
+            log.info("crate share, add share id to bloom filter, shareId is {}", context.getRecord().getShareId());
+        }
+    }
 
     /**
      * 刷新一个分享的分享状态

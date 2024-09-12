@@ -21,6 +21,14 @@ public interface YPanShareMapper extends BaseMapper<YPanShare> {
      * @return
      */
     List<YPanShareUrlListVO> selectShareVOListByUserId(@Param("userId") Long userId);
+
+    /**
+     * 滚动查询已存在的分享ID
+     * @param startId
+     * @param limit
+     * @return
+     */
+    List<Long> rollingQueryShareId(@Param("startId") long startId, @Param("limit") long limit);
 }
 
 
