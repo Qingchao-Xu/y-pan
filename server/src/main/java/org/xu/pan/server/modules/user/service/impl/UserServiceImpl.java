@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.dao.DuplicateKeyException;
@@ -13,6 +14,7 @@ import org.xu.pan.core.response.ResponseCode;
 import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.core.utils.JwtUtil;
 import org.xu.pan.core.utils.PasswordUtil;
+import org.xu.pan.server.common.cache.AnnotationCacheService;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.CreateFolderContext;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
@@ -26,7 +28,10 @@ import org.xu.pan.server.modules.user.mapper.YPanUserMapper;
 import org.springframework.stereotype.Service;
 import org.xu.pan.server.modules.user.vo.UserInfoVO;
 
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -46,6 +51,10 @@ public class UserServiceImpl extends ServiceImpl<YPanUserMapper, YPanUser>
 
     @Autowired
     private CacheManager cacheManager;
+
+    @Autowired
+    @Qualifier(value = "userAnnotationCacheService")
+    private AnnotationCacheService<YPanUser> cacheService;
 
     /**
      * 用户注册的业务实现
@@ -193,6 +202,36 @@ public class UserServiceImpl extends ServiceImpl<YPanUserMapper, YPanUser>
         }
 
         return userConverter.assembleUserInfoVO(entity, yPanUserFile);
+    }
+
+    @Override
+    public boolean removeById(Serializable id) {
+        return cacheService.removeById(id);
+    }
+
+    @Override
+    public boolean removeByIds(Collection<? extends Serializable> idList) {
+        throw new YPanBusinessException("请更换为手动缓存");
+    }
+
+    @Override
+    public boolean updateById(YPanUser entity) {
+        return cacheService.updateById(entity.getUserId(), entity);
+    }
+
+    @Override
+    public boolean updateBatchById(Collection<YPanUser> entityList) {
+        throw new YPanBusinessException("请更换为手动缓存");
+    }
+
+    @Override
+    public YPanUser getById(Serializable id) {
+        return cacheService.getById(id);
+    }
+
+    @Override
+    public List<YPanUser> listByIds(Collection<? extends Serializable> idList) {
+        throw new YPanBusinessException("请更换为手动缓存");
     }
 
     /****************private*****************/

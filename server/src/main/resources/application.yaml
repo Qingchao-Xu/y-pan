@@ -62,9 +62,10 @@ org:
             access-key-id:
             access-key-secret:
             auto-create-bucket: true
+      server:
+        share-prefix: http://127.0.0.1:5173/
 #          fdfs:
 #            connect-timeout: 600
 #            tracker-list:
 #              - 39.98.37.93:22122
 #            group: group1
-

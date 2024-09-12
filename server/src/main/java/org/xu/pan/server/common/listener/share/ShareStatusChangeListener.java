@@ -41,6 +41,7 @@ public class ShareStatusChangeListener {
             return;
         }
         List<YPanUserFile> allRecords = iUserFileService.findAllFileRecordsByFileIdList(fileIdList);
+
         List<Long> allAvailableFileIdList = allRecords.stream()
                 .filter(record -> Objects.equals(record.getDelFlag(), DelFlagEnum.NO.getCode()))
                 .map(YPanUserFile::getFileId)
@@ -66,6 +67,7 @@ public class ShareStatusChangeListener {
                 .filter(record -> Objects.equals(record.getDelFlag(), DelFlagEnum.NO.getCode()))
                 .map(YPanUserFile::getFileId)
                 .collect(Collectors.toList());
+        allAvailableFileIdList.addAll(fileIdList);
         iShareService.refreshShareStatus(allAvailableFileIdList);
     }
 

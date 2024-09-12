@@ -51,9 +51,14 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.xu.pan</groupId>-->
+<!--            <artifactId>y-pan-cache-redis</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.xu.pan</groupId>
-            <artifactId>y-pan-cache-redis</artifactId>
+            <artifactId>y-pan-cache-caffeine</artifactId>
             <version>1.0</version>
         </dependency>
         <dependency>

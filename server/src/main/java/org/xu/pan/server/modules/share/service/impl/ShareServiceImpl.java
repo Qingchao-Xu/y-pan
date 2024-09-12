@@ -10,6 +10,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.assertj.core.util.Sets;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.transaction.annotation.Transactional;
 import org.xu.pan.core.constants.YPanConstants;
@@ -18,6 +19,7 @@ import org.xu.pan.core.response.ResponseCode;
 import org.xu.pan.core.utils.IdUtil;
 import org.xu.pan.core.utils.JwtUtil;
 import org.xu.pan.core.utils.UUIDUtil;
+import org.xu.pan.server.common.cache.ManualCacheService;
 import org.xu.pan.server.common.config.PanServerConfig;
 import org.xu.pan.server.common.event.log.ErrorLogEvent;
 import org.xu.pan.server.modules.file.constants.FileConstants;
@@ -41,6 +43,8 @@ import org.xu.pan.server.modules.share.vo.*;
 import org.xu.pan.server.modules.user.entity.YPanUser;
 import org.xu.pan.server.modules.user.service.IUserService;
 
+import java.io.Serializable;
+import java.net.URLEncoder;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -64,6 +68,10 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
 
     @Autowired
     private IUserService iUserService;
+
+    @Autowired
+    @Qualifier(value = "shareManualCacheService")
+    private ManualCacheService<YPanShare> cacheService;
 
     private ApplicationContext applicationContext;
 
@@ -253,6 +261,42 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
         shareIdSet.stream().forEach(this::refreshOneShareStatus);
     }
 
+    @Override
+    public boolean removeById(Serializable id) {
+        return cacheService.removeById(id);
+    }
+
+    @Override
+    public boolean removeByIds(Collection<? extends Serializable> idList) {
+        return cacheService.removeByIds(idList);
+    }
+
+    @Override
+    public boolean updateById(YPanShare entity) {
+        return cacheService.updateById(entity.getShareId(), entity);
+    }
+
+    @Override
+    public boolean updateBatchById(Collection<YPanShare> entityList) {
+        if (CollectionUtils.isEmpty(entityList)) {
+            return true;
+        }
+        Map<Long, YPanShare> shareMap = entityList.stream().collect(Collectors.toMap(YPanShare::getShareId, e -> e));
+        return cacheService.updateByIds(shareMap);
+    }
+
+    @Override
+    public YPanShare getById(Serializable id) {
+        return cacheService.getById(id);
+    }
+
+    @Override
+    public List<YPanShare> listByIds(Collection<? extends Serializable> idList) {
+        return cacheService.getByIds(idList);
+    }
+
+    /***********private*************/
+
     /**
      * 刷新一个分享的分享状态
      * <p>
@@ -277,21 +321,19 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
             return;
         }
 
-        doChangeShareStatus(shareId, shareStatus);
+        doChangeShareStatus(record, shareStatus);
     }
 
     /**
      * 执行刷新文件分享状态的动作
      *
-     * @param shareId
+     * @param record
      * @param shareStatus
      */
-    private void doChangeShareStatus(Long shareId, ShareStatusEnum shareStatus) {
-        UpdateWrapper updateWrapper = Wrappers.update();
-        updateWrapper.eq("share_id", shareId);
-        updateWrapper.set("share_status", shareStatus.getCode());
-        if (!update(updateWrapper)) {
-            applicationContext.publishEvent(new ErrorLogEvent(this, "更新分享状态失败，请手动更改状态，分享ID为：" + shareId + ", 分享" +
+    private void doChangeShareStatus(YPanShare record, ShareStatusEnum shareStatus) {
+        record.setShareStatus(shareStatus.getCode());
+        if (!updateById(record)) {
+            applicationContext.publishEvent(new ErrorLogEvent(this, "更新分享状态失败，请手动更改状态，分享ID为：" + record.getShareId() + ", 分享" +
                     "状态改为：" + shareStatus.getCode(), YPanConstants.ZERO_LONG));
         }
     }
@@ -345,8 +387,6 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
         List<Long> shareIdList = iShareFileService.listObjs(queryWrapper, value -> (Long) value);
         return shareIdList;
     }
-
-    /*******************************************private*******************************************/
 
     /**
      * 执行分享文件下载的动作
@@ -731,7 +771,7 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
         if (sharePrefix.lastIndexOf(YPanConstants.SLASH_STR) == YPanConstants.MINUS_ONE_INT.intValue()) {
             sharePrefix += YPanConstants.SLASH_STR;
         }
-        return sharePrefix + shareId;
+        return sharePrefix + URLEncoder.encode(IdUtil.encrypt(shareId));
     }
 }
 

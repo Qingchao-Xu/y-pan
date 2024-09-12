@@ -31,11 +31,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * 文件模块单元测试类
+ * 文件分享模块单元测试类
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = YPanServerLauncher.class)
-@Transactional
+//@Transactional
 public class ShareTest {
 
     @Autowired
@@ -46,6 +46,19 @@ public class ShareTest {
 
     @Autowired
     private IShareService iShareService;
+
+    @Test
+    public void init() {
+        CreateShareUrlContext context = new CreateShareUrlContext();
+        context.setUserId(1834109843737284608L);
+        context.setShareType(ShareTypeEnum.NEED_SHARE_CODE.getCode());
+        context.setShareDayType(ShareDayTypeEnum.PERMANENT_VALIDITY.getCode());
+        context.setShareFileIdList(Lists.newArrayList(1834110502272372736L));
+        for (int i = 0; i < 10000000; i++) {
+            context.setShareName("测试分享" + i);
+            iShareService.create(context);
+        }
+    }
 
     /**
      * 创建分享链接成功
