@@ -5,22 +5,15 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.xu.pan</groupId>
-        <artifactId>y-pan-parent</artifactId>
+        <artifactId>y-pan-framework</artifactId>
         <version>1.0</version>
     </parent>
 
-    <artifactId>y-pan-framework</artifactId>
+    <artifactId>y-pan-lock</artifactId>
     <packaging>pom</packaging>
     <modules>
-        <module>core</module>
-        <module>web</module>
-        <module>swagger2</module>
-        <module>orm</module>
-        <module>cache</module>
-        <module>schedule</module>
-        <module>storage-engine</module>
-        <module>bloom-filter</module>
-        <module>lock</module>
+        <module>lock-core</module>
+        <module>lock-local</module>
     </modules>
 
     <properties>

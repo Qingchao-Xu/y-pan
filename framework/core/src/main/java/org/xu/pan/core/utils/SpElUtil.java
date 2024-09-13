@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class SpElUtil {
 
-    private static final RPanExpressionEvaluator expressionEvaluator = new RPanExpressionEvaluator();
+    private static final YPanExpressionEvaluator expressionEvaluator = new YPanExpressionEvaluator();
 
     /**
      * 解析SpEl表达式
@@ -161,7 +161,7 @@ public class SpElUtil {
      * 表达式执行器对象
      */
     @Data
-    private static class RPanExpressionEvaluator extends CachedExpressionEvaluator {
+    private static class YPanExpressionEvaluator extends CachedExpressionEvaluator {
         private final ParameterNameDiscoverer paramNameDiscoverer = new DefaultParameterNameDiscoverer();
         private final Map<ExpressionKey, Expression> conditionCache = new ConcurrentHashMap<>(256);
         private final Map<AnnotatedElementKey, Method> targetMethodCache = new ConcurrentHashMap<>(256);
