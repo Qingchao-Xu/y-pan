@@ -15,6 +15,7 @@
         <module>lock-core</module>
         <module>lock-local</module>
         <module>lock-redis</module>
+        <module>lock-zookeeper</module>
     </modules>
 
     <properties>
