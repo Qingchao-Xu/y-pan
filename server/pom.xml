@@ -61,24 +61,29 @@
             <artifactId>y-pan-cache-caffeine</artifactId>
             <version>1.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.xu.pan</groupId>
-            <artifactId>y-pan-storage-engine-local</artifactId>
-            <version>1.0</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.xu.pan</groupId>-->
+<!--            <artifactId>y-pan-storage-engine-local</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
 <!--        <dependency>-->
 <!--            <groupId>org.xu.pan</groupId>-->
 <!--            <artifactId>y-pan-storage-engine-fastdfs</artifactId>-->
 <!--            <version>1.0</version>-->
 <!--        </dependency>-->
-<!--        <dependency>-->
-<!--            <groupId>org.xu.pan</groupId>-->
-<!--            <artifactId>y-pan-storage-engine-oss</artifactId>-->
-<!--            <version>1.0</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.xu.pan</groupId>
+            <artifactId>y-pan-storage-engine-oss</artifactId>
+            <version>1.0</version>
+        </dependency>
         <dependency>
             <groupId>org.xu.pan</groupId>
             <artifactId>y-pan-bloom-filter-local</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.xu.pan</groupId>
+            <artifactId>y-pan-lock-redis</artifactId>
             <version>1.0</version>
         </dependency>
     </dependencies>

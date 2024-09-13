@@ -16,6 +16,7 @@ import org.xu.pan.core.constants.YPanConstants;
 import org.xu.pan.core.exception.YPanFrameworkException;
 import org.xu.pan.core.utils.FileUtils;
 import org.xu.pan.core.utils.UUIDUtil;
+import org.xu.pan.lock.core.annotation.Lock;
 import org.xu.pan.storage.engine.core.AbstractStorageEngine;
 import org.xu.pan.storage.engine.core.context.*;
 import org.xu.pan.storage.engine.oss.config.OssStorageEngineConfig;
@@ -138,7 +139,8 @@ public class OSSStorageEngine extends AbstractStorageEngine {
      * @throws IOException
      */
     @Override
-    protected synchronized void doStoreChunk(StoreFileChunkContext context) throws IOException {
+    @Lock(name = "ossDoStoreChunk", keys = {"#context.userId", "#context.identifier"}, expireSecond = 10L)
+    protected void doStoreChunk(StoreFileChunkContext context) throws IOException {
         if (context.getTotalChunks() > TEN_THOUSAND_INT) {
             throw new YPanFrameworkException("分片数超过了限制，分片数不得大于： " + TEN_THOUSAND_INT);
         }

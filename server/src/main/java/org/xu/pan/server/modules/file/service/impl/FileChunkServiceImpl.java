@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.xu.pan.core.exception.YPanBusinessException;
 import org.xu.pan.core.utils.IdUtil;
+import org.xu.pan.lock.core.annotation.Lock;
 import org.xu.pan.server.common.config.PanServerConfig;
 import org.xu.pan.server.modules.file.context.FileChunkSaveContext;
 import org.xu.pan.server.modules.file.converter.FileConverter;
@@ -48,7 +49,8 @@ public class FileChunkServiceImpl extends ServiceImpl<YPanFileChunkMapper, YPanF
      * @param context
      */
     @Override
-    public synchronized void saveChunkFile(FileChunkSaveContext context) { // 分布式并发场景这里如何锁？？？
+    @Lock(name = "saveChunkFile", keys = {"#context.userId", "#context.identifier"}, expireSecond = 10L)
+    public void saveChunkFile(FileChunkSaveContext context) { // 分布式并发场景这里如何锁？？？
         doSaveChunkFile(context);
         doJudgeMergeFile(context);
     }
