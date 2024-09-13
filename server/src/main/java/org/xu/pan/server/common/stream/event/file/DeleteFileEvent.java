@@ -1,4 +1,4 @@
-package org.xu.pan.server.common.event.file;
+package org.xu.pan.server.common.stream.event.file;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.springframework.context.ApplicationEvent;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -15,12 +16,13 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class DeleteFileEvent extends ApplicationEvent {
+public class DeleteFileEvent implements Serializable {
+
+    private static final long serialVersionUID = -4858632894534904465L;
 
     private List<Long> fileIdList;
 
-    public DeleteFileEvent(Object source, List<Long> fileIdList) {
-        super(source);
+    public DeleteFileEvent(List<Long> fileIdList) {
         this.fileIdList = fileIdList;
     }
 

@@ -9,6 +9,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.http.MediaType;
@@ -17,8 +18,9 @@ import org.xu.pan.core.constants.YPanConstants;
 import org.xu.pan.core.exception.YPanBusinessException;
 import org.xu.pan.core.utils.FileUtils;
 import org.xu.pan.core.utils.IdUtil;
-import org.xu.pan.server.common.event.file.DeleteFileEvent;
-import org.xu.pan.server.common.event.search.UserSearchEvent;
+import org.xu.pan.server.common.stream.channel.PanChannels;
+import org.xu.pan.server.common.stream.event.file.DeleteFileEvent;
+import org.xu.pan.server.common.stream.event.search.UserSearchEvent;
 import org.xu.pan.server.common.utils.HttpUtil;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.*;
@@ -36,6 +38,7 @@ import org.springframework.stereotype.Service;
 import org.xu.pan.server.modules.file.vo.*;
 import org.xu.pan.storage.engine.core.StorageEngine;
 import org.xu.pan.storage.engine.core.context.ReadFileContext;
+import org.xu.pan.stream.core.IStreamProducer;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -50,9 +53,7 @@ import java.util.stream.Collectors;
 */
 @Service(value = "userFileService")
 public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUserFile>
-    implements IUserFileService, ApplicationContextAware {
-
-    private ApplicationContext applicationContext;
+    implements IUserFileService {
 
     @Autowired
     private IFileService iFileService;
@@ -66,10 +67,9 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
     @Autowired
     private StorageEngine storageEngine;
 
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        this.applicationContext = applicationContext;
-    }
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     /**
      * 创建文件夹信息
@@ -470,8 +470,8 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
      * @param context
      */
     private void afterSearch(FileSearchContext context) {
-        UserSearchEvent event = new UserSearchEvent(this, context.getKeyword(), context.getUserId());
-        applicationContext.publishEvent(event);
+        UserSearchEvent event = new UserSearchEvent(context.getKeyword(), context.getUserId());
+        producer.sendMessage(PanChannels.USER_SEARCH_OUTPUT, event);
     }
 
     /**
@@ -867,8 +867,8 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
      * @param context
      */
     private void afterFileDelete(DeleteFileContext context) {
-        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(this, context.getFileIdList());
-        applicationContext.publishEvent(deleteFileEvent);
+        DeleteFileEvent deleteFileEvent = new DeleteFileEvent(context.getFileIdList());
+        producer.sendMessage(PanChannels.DELETE_FILE_OUTPUT, deleteFileEvent);
     }
 
     /**

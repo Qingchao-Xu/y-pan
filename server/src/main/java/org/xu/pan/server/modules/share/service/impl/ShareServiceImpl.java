@@ -2,7 +2,6 @@ package org.xu.pan.server.modules.share.service.impl;
 
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
@@ -24,7 +23,8 @@ import org.xu.pan.core.utils.JwtUtil;
 import org.xu.pan.core.utils.UUIDUtil;
 import org.xu.pan.server.common.cache.ManualCacheService;
 import org.xu.pan.server.common.config.PanServerConfig;
-import org.xu.pan.server.common.event.log.ErrorLogEvent;
+import org.xu.pan.server.common.stream.channel.PanChannels;
+import org.xu.pan.server.common.stream.event.log.ErrorLogEvent;
 import org.xu.pan.server.modules.file.constants.FileConstants;
 import org.xu.pan.server.modules.file.context.CopyFileContext;
 import org.xu.pan.server.modules.file.context.FileDownloadContext;
@@ -45,6 +45,7 @@ import org.springframework.stereotype.Service;
 import org.xu.pan.server.modules.share.vo.*;
 import org.xu.pan.server.modules.user.entity.YPanUser;
 import org.xu.pan.server.modules.user.service.IUserService;
+import org.xu.pan.stream.core.IStreamProducer;
 
 import java.io.Serializable;
 import java.net.URLEncoder;
@@ -80,13 +81,11 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
     @Autowired
     private BloomFilterManager manager;
 
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
+
     private static final String BLOOM_FILTER_NAME = "SHARE_SIMPLE_DETAIL";
-
-    private ApplicationContext applicationContext;
-
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
 
     /**
      * 创建分享链接
@@ -368,7 +367,7 @@ public class ShareServiceImpl extends ServiceImpl<YPanShareMapper, YPanShare>
     private void doChangeShareStatus(YPanShare record, ShareStatusEnum shareStatus) {
         record.setShareStatus(shareStatus.getCode());
         if (!updateById(record)) {
-            applicationContext.publishEvent(new ErrorLogEvent(this, "更新分享状态失败，请手动更改状态，分享ID为：" + record.getShareId() + ", 分享" +
+            producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, new ErrorLogEvent("更新分享状态失败，请手动更改状态，分享ID为：" + record.getShareId() + ", 分享" +
                     "状态改为：" + shareStatus.getCode(), YPanConstants.ZERO_LONG));
         }
     }

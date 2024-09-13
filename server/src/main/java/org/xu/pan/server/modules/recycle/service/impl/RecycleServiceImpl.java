@@ -4,13 +4,13 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.xu.pan.core.constants.YPanConstants;
 import org.xu.pan.core.exception.YPanBusinessException;
-import org.xu.pan.server.common.event.file.FilePhysicalDeleteEvent;
-import org.xu.pan.server.common.event.file.FileRestoreEvent;
+import org.xu.pan.server.common.stream.channel.PanChannels;
+import org.xu.pan.server.common.stream.event.file.FilePhysicalDeleteEvent;
+import org.xu.pan.server.common.stream.event.file.FileRestoreEvent;
 import org.xu.pan.server.modules.file.context.QueryFileListContext;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import org.xu.pan.server.modules.file.enums.DelFlagEnum;
@@ -20,6 +20,7 @@ import org.xu.pan.server.modules.recycle.context.DeleteContext;
 import org.xu.pan.server.modules.recycle.context.QueryRecycleFileListContext;
 import org.xu.pan.server.modules.recycle.context.RestoreContext;
 import org.xu.pan.server.modules.recycle.service.IRecycleService;
+import org.xu.pan.stream.core.IStreamProducer;
 
 import java.util.Date;
 import java.util.List;
@@ -30,17 +31,14 @@ import java.util.stream.Collectors;
  * 回收站模块业务处理类
  */
 @Service
-public class RecycleServiceImpl implements IRecycleService, ApplicationContextAware {
+public class RecycleServiceImpl implements IRecycleService {
 
     @Autowired
     private IUserFileService iUserFileService;
 
-    private ApplicationContext applicationContext;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     /**
      * 查询用户的回收站文件列表
@@ -102,8 +100,8 @@ public class RecycleServiceImpl implements IRecycleService, ApplicationContextAw
      * @param context
      */
     private void afterDelete(DeleteContext context) {
-        FilePhysicalDeleteEvent event = new FilePhysicalDeleteEvent(this, context.getAllRecords());
-        applicationContext.publishEvent(event);
+        FilePhysicalDeleteEvent event = new FilePhysicalDeleteEvent(context.getAllRecords());
+        producer.sendMessage(PanChannels.PHYSICAL_DELETE_FILE_OUTPUT, event);
     }
 
     /**
@@ -153,8 +151,8 @@ public class RecycleServiceImpl implements IRecycleService, ApplicationContextAw
      * @param context
      */
     private void afterRestore(RestoreContext context) {
-        FileRestoreEvent event = new FileRestoreEvent(this, context.getFileIdList());
-        applicationContext.publishEvent(event);
+        FileRestoreEvent event = new FileRestoreEvent(context.getFileIdList());
+        producer.sendMessage(PanChannels.FILE_RESTORE_OUTPUT, event);
     }
 
     /**

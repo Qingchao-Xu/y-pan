@@ -1,18 +1,18 @@
-package org.xu.pan.server.common.listener.file;
+package org.xu.pan.server.common.stream.consumer.file;
 
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 import org.xu.pan.core.constants.YPanConstants;
-import org.xu.pan.server.common.event.file.FilePhysicalDeleteEvent;
-import org.xu.pan.server.common.event.log.ErrorLogEvent;
+import org.xu.pan.server.common.stream.event.file.FilePhysicalDeleteEvent;
+import org.xu.pan.server.common.stream.event.log.ErrorLogEvent;
+import org.xu.pan.server.common.stream.channel.PanChannels;
 import org.xu.pan.server.modules.file.entity.YPanFile;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 import org.xu.pan.server.modules.file.enums.FolderFlagEnum;
@@ -20,6 +20,8 @@ import org.xu.pan.server.modules.file.service.IFileService;
 import org.xu.pan.server.modules.file.service.IUserFileService;
 import org.xu.pan.storage.engine.core.StorageEngine;
 import org.xu.pan.storage.engine.core.context.DeleteFileContext;
+import org.xu.pan.stream.core.AbstractConsumer;
+import org.xu.pan.stream.core.IStreamProducer;
 
 import java.io.IOException;
 import java.util.List;
@@ -30,7 +32,7 @@ import java.util.stream.Collectors;
  * 文件物理删除监听器
  */
 @Component
-public class FilePhysicalDeleteEventListener implements ApplicationContextAware {
+public class FilePhysicalDeleteEventConsumer extends AbstractConsumer {
 
     @Autowired
     private IFileService iFileService;
@@ -41,12 +43,9 @@ public class FilePhysicalDeleteEventListener implements ApplicationContextAware 
     @Autowired
     private StorageEngine storageEngine;
 
-    private ApplicationContext applicationContext;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     /**
      * 监听文件物理删除事件执行器
@@ -57,11 +56,15 @@ public class FilePhysicalDeleteEventListener implements ApplicationContextAware 
      * 2、删除记录
      * 3、物理清理文件（委托文件存储引擎）
      *
-     * @param event
+     * @param message
      */
-    @EventListener(classes = FilePhysicalDeleteEvent.class)  // TransactionalEventListener 和 EventListener 有什么区别
-    @Async(value = "eventListenerTaskExecutor")
-    public void physicalDeleteFile(FilePhysicalDeleteEvent event) {
+    @StreamListener(PanChannels.PHYSICAL_DELETE_FILE_INPUT)
+    public void physicalDeleteFile(Message<FilePhysicalDeleteEvent> message) {
+        if (isEmptyMessage(message)) {
+            return;
+        }
+        printLog(message);
+        FilePhysicalDeleteEvent event = message.getPayload();
         List<YPanUserFile> allRecords = event.getAllRecords();
         if (CollectionUtils.isEmpty(allRecords)) {
             return;
@@ -75,7 +78,7 @@ public class FilePhysicalDeleteEventListener implements ApplicationContextAware 
             return;
         }
         if (!iFileService.removeByIds(realFileIdList)) {
-            applicationContext.publishEvent(new ErrorLogEvent(this, "实体文件记录：" + JSON.toJSONString(realFileIdList) + "， 物理删除失败，请执行手动删除", YPanConstants.ZERO_LONG));
+            producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, new ErrorLogEvent("实体文件记录：" + JSON.toJSONString(realFileIdList) + "， 物理删除失败，请执行手动删除", YPanConstants.ZERO_LONG));
             return;
         }
         physicalDeleteFileByStorageEngine(realFileRecords);
@@ -95,7 +98,7 @@ public class FilePhysicalDeleteEventListener implements ApplicationContextAware 
         try {
             storageEngine.delete(deleteFileContext);
         } catch (IOException e) {
-            applicationContext.publishEvent(new ErrorLogEvent(this, "实体文件：" + JSON.toJSONString(realPathList) + "， 物理删除失败，请执行手动删除", YPanConstants.ZERO_LONG));
+            producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, new ErrorLogEvent("实体文件：" + JSON.toJSONString(realPathList) + "， 物理删除失败，请执行手动删除", YPanConstants.ZERO_LONG));
         }
     }
 

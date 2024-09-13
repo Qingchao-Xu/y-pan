@@ -1,13 +1,15 @@
-package org.xu.pan.server.common.listener.log;
+package org.xu.pan.server.common.stream.consumer.log;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Async;
+import org.springframework.cloud.stream.annotation.StreamListener;
+import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 import org.xu.pan.core.utils.IdUtil;
-import org.xu.pan.server.common.event.log.ErrorLogEvent;
+import org.xu.pan.server.common.stream.event.log.ErrorLogEvent;
+import org.xu.pan.server.common.stream.channel.PanChannels;
 import org.xu.pan.server.modules.log.entity.YPanErrorLog;
 import org.xu.pan.server.modules.log.service.IErrorLogService;
+import org.xu.pan.stream.core.AbstractConsumer;
 
 import java.util.Date;
 
@@ -15,7 +17,7 @@ import java.util.Date;
  * 系统错误日志监听器
  */
 @Component
-public class ErrorLogEventListener {
+public class ErrorLogEventListener extends AbstractConsumer {
 
     @Autowired
     private IErrorLogService iErrorLogService;
@@ -23,11 +25,14 @@ public class ErrorLogEventListener {
     /**
      * 监听系统错误日志事件，并保存到数据库中
      *
-     * @param event
+     * @param message
      */
-    @EventListener(ErrorLogEvent.class)
-    @Async(value = "eventListenerTaskExecutor")
-    public void saveErrorLog(ErrorLogEvent event) {
+    @StreamListener(PanChannels.ERROR_LOG_INPUT)
+    public void saveErrorLog(Message<ErrorLogEvent> message) {
+        if (isEmptyMessage(message)) {
+            return;
+        }
+        ErrorLogEvent event = message.getPayload();
         YPanErrorLog record = new YPanErrorLog();
         record.setId(IdUtil.get());
         record.setLogContent(event.getErrorMsg());

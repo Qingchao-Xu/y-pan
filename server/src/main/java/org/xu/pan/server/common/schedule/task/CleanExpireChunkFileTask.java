@@ -6,16 +6,17 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.xu.pan.core.constants.YPanConstants;
 import org.xu.pan.schedule.ScheduleTask;
-import org.xu.pan.server.common.event.log.ErrorLogEvent;
+import org.xu.pan.server.common.stream.channel.PanChannels;
+import org.xu.pan.server.common.stream.event.log.ErrorLogEvent;
 import org.xu.pan.server.modules.file.entity.YPanFileChunk;
 import org.xu.pan.server.modules.file.service.IFileChunkService;
 import org.xu.pan.storage.engine.core.StorageEngine;
 import org.xu.pan.storage.engine.core.context.DeleteFileContext;
+import org.xu.pan.stream.core.IStreamProducer;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @Slf4j
-public class CleanExpireChunkFileTask implements ScheduleTask, ApplicationContextAware {
+public class CleanExpireChunkFileTask implements ScheduleTask {
 
     private static final Long BATCH_SIZE = 500L;
 
@@ -38,12 +39,9 @@ public class CleanExpireChunkFileTask implements ScheduleTask, ApplicationContex
     @Autowired
     private StorageEngine storageEngine;
 
-    private ApplicationContext applicationContext;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     /**
      * 获取定时任务的名称
@@ -118,8 +116,8 @@ public class CleanExpireChunkFileTask implements ScheduleTask, ApplicationContex
      * @param realPaths
      */
     private void saveErrorLog(List<String> realPaths) {
-        ErrorLogEvent event = new ErrorLogEvent(this, "文件物理删除失败，请手动执行文件删除！文件路径为：" + JSON.toJSONString(realPaths), YPanConstants.ZERO_LONG);
-        applicationContext.publishEvent(event);
+        ErrorLogEvent event = new ErrorLogEvent("文件物理删除失败，请手动执行文件删除！文件路径为：" + JSON.toJSONString(realPaths), YPanConstants.ZERO_LONG);
+        producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, event);
     }
 
     /**

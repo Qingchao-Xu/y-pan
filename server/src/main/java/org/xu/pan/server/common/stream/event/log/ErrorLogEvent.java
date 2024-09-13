@@ -1,10 +1,12 @@
-package org.xu.pan.server.common.event.log;
+package org.xu.pan.server.common.stream.event.log;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import org.springframework.context.ApplicationEvent;
+
+import java.io.Serializable;
 
 /**
  * 错误日志事件
@@ -13,7 +15,9 @@ import org.springframework.context.ApplicationEvent;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class ErrorLogEvent extends ApplicationEvent {
+public class ErrorLogEvent implements Serializable {
+
+    private static final long serialVersionUID = 6850677082983784404L;
 
     /**
      * 错误日志的内容
@@ -25,8 +29,7 @@ public class ErrorLogEvent extends ApplicationEvent {
      */
     private Long userId;
 
-    public ErrorLogEvent(Object source, String errorMsg, Long userId) {
-        super(source);
+    public ErrorLogEvent(String errorMsg, Long userId) {
         this.errorMsg = errorMsg;
         this.userId = userId;
     }

@@ -7,14 +7,13 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.xu.pan.core.exception.YPanBusinessException;
 import org.xu.pan.core.utils.FileUtils;
 import org.xu.pan.core.utils.IdUtil;
-import org.xu.pan.server.common.event.log.ErrorLogEvent;
+import org.xu.pan.server.common.stream.channel.PanChannels;
+import org.xu.pan.server.common.stream.event.log.ErrorLogEvent;
 import org.xu.pan.server.modules.file.context.FileChunkMergeAndSaveContext;
 import org.xu.pan.server.modules.file.context.FileSaveContext;
 import org.xu.pan.server.modules.file.context.QueryRealFileListContext;
@@ -28,6 +27,7 @@ import org.xu.pan.storage.engine.core.StorageEngine;
 import org.xu.pan.storage.engine.core.context.DeleteFileContext;
 import org.xu.pan.storage.engine.core.context.MergeFileContext;
 import org.xu.pan.storage.engine.core.context.StoreFileContext;
+import org.xu.pan.stream.core.IStreamProducer;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
 */
 @Service
 public class FileServiceImpl extends ServiceImpl<YPanFileMapper, YPanFile>
-    implements IFileService, ApplicationContextAware {
+    implements IFileService {
 
     @Autowired
     private StorageEngine storageEngine;
@@ -51,12 +51,9 @@ public class FileServiceImpl extends ServiceImpl<YPanFileMapper, YPanFile>
     @Autowired
     private IFileChunkService iFileChunkService;
 
-    private ApplicationContext applicationContext;
-
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-
-    }
+    @Autowired
+    @Qualifier(value = "defaultStreamProducer")
+    private IStreamProducer producer;
 
     /**
      * 根据条件查询用户的实际文件列表
@@ -170,8 +167,8 @@ public class FileServiceImpl extends ServiceImpl<YPanFileMapper, YPanFile>
                 storageEngine.delete(deleteFileContext);
             } catch (IOException e) {
                 e.printStackTrace();
-                ErrorLogEvent errorLogEvent = new ErrorLogEvent(this, "文件物理删除失败，请执行手动删除！文件路径: " + realPath, userId);
-                applicationContext.publishEvent(errorLogEvent);
+                ErrorLogEvent errorLogEvent = new ErrorLogEvent("文件物理删除失败，请执行手动删除！文件路径: " + realPath, userId);
+                producer.sendMessage(PanChannels.ERROR_LOG_OUTPUT, errorLogEvent);
             }
         }
         return record;

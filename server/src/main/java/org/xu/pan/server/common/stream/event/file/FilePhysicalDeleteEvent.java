@@ -1,4 +1,4 @@
-package org.xu.pan.server.common.event.file;
+package org.xu.pan.server.common.stream.event.file;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -7,6 +7,7 @@ import lombok.ToString;
 import org.springframework.context.ApplicationEvent;
 import org.xu.pan.server.modules.file.entity.YPanUserFile;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -16,15 +17,16 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @ToString
-public class FilePhysicalDeleteEvent extends ApplicationEvent {
+public class FilePhysicalDeleteEvent implements Serializable {
+
+    private static final long serialVersionUID = 1436844402341789993L;
 
     /**
      * 所有被物理删除的文件实体集合
      */
     private List<YPanUserFile> allRecords;
 
-    public FilePhysicalDeleteEvent(Object source, List<YPanUserFile> allRecords) {
-        super(source);
+    public FilePhysicalDeleteEvent(List<YPanUserFile> allRecords) {
         this.allRecords = allRecords;
     }
 

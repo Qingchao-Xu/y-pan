@@ -19,6 +19,38 @@ spring:
     password: root
     url: jdbc:mysql://127.0.0.1:3306/y_pan?characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
     driver-class-name: com.mysql.cj.jdbc.Driver
+  cloud:
+    stream:
+      rocketmq:
+        binder:
+          name-server: localhost:9876
+      bindings:
+        deleteFileInput:
+          destination: deleteFileTopic
+          group: deleteFileGroup
+        fileRestoreInput:
+          destination: fileRestoreTopic
+          group: fileRestoreGroup
+        physicalDeleteFileInput:
+          destination: physicalDeleteFileTopic
+          group: physicalDeleteFileGroup
+        userSearchInput:
+          destination: userSearchTopic
+          group: userSearchGroup
+        errorLogInput:
+          destination: errorLogTopic
+          group: errorLogGroup
+        deleteFileOutput:
+          destination: deleteFileTopic
+        fileRestoreOutput:
+          destination: fileRestoreTopic
+        physicalDeleteFileOutput:
+          destination: physicalDeleteFileTopic
+        userSearchOutput:
+          destination: userSearchTopic
+        errorLogOutput:
+          destination: errorLogTopic
+
 
 
 mybatis-plus:
