@@ -32,6 +32,7 @@ public class AES128Util {
     public static byte[] aesEncrypt(byte[] content) {
         try {
             SecretKeySpec secretKeySpec = new SecretKeySpec(P_KEY.getBytes(), AES_STR);
+//            IvParameterSpec iv = new IvParameterSpec(IV.getBytes(StandardCharsets.UTF_8));
             Cipher cipher = Cipher.getInstance(INSTANCE_STR);
             IvParameterSpec iv = new IvParameterSpec(IV.getBytes());
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, iv);
@@ -53,7 +54,7 @@ public class AES128Util {
     public static byte[] aesDecode(byte[] content) {
         try {
             SecretKeySpec secretKeySpec = new SecretKeySpec(P_KEY.getBytes(), AES_STR);
-            IvParameterSpec iv = new IvParameterSpec(IV.getBytes(StandardCharsets.UTF_8));
+            IvParameterSpec iv = new IvParameterSpec(IV.getBytes());
             Cipher cipher = Cipher.getInstance(INSTANCE_STR);
             cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, iv);
             byte[] result = cipher.doFinal(content);

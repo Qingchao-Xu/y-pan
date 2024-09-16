@@ -1,7 +1,11 @@
 package org.xu.pan.server.modules.user.service;
 
+import org.xu.pan.server.modules.user.context.QueryUserSearchHistoryContext;
 import org.xu.pan.server.modules.user.entity.YPanUserSearchHistory;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.xu.pan.server.modules.user.vo.UserSearchHistoryVO;
+
+import java.util.List;
 
 /**
 * @author 23561
@@ -10,4 +14,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface IUserSearchHistoryService extends IService<YPanUserSearchHistory> {
 
+    /**
+     * 获取用户最新的搜索历史记录，默认10条
+     * @param context
+     * @return
+     */
+    List<UserSearchHistoryVO> getUserSearchHistories(QueryUserSearchHistoryContext context);
 }

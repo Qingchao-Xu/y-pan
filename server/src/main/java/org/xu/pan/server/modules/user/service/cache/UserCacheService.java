@@ -40,7 +40,7 @@ public class UserCacheService implements AnnotationCacheService<YPanUser> {
      * @param entity
      * @return
      */
-    @CachePut(cacheNames = CacheConstants.Y_PAN_CACHE_NAME, keyGenerator = "userIdKeyGenerator")
+    @CacheEvict(cacheNames = CacheConstants.Y_PAN_CACHE_NAME, keyGenerator = "userIdKeyGenerator")
     @Override
     public boolean updateById(Serializable id, YPanUser entity) {
         return mapper.updateById(entity) == 1;

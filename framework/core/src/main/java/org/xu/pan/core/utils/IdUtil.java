@@ -195,7 +195,7 @@ public class IdUtil {
             byteBuffer.putLong(0, id);
             byte[] content = byteBuffer.array();
             byte[] encrypt = AES128Util.aesEncrypt(content);
-            return Base64.encode(encrypt);
+            return Base64.encodeUrlSafe(encrypt);  // 这里的这个问题，注意！！
         }
         return StringUtils.EMPTY;
     }

@@ -138,4 +138,16 @@ public class UserController {
         return R.data(userInfoVO);
     }
 
+    @ApiOperation(
+            value = "查询登录用户的基本信息",
+            notes = "该接口提供了查询登录用户的基本信息的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("")
+    public R<UserInfoVO> getInfo() {
+        UserInfoVO userInfoVO = iUserService.info(UserIdUtil.get());
+        return R.data(userInfoVO);
+    }
+
 }

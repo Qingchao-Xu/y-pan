@@ -1,6 +1,7 @@
 package org.xu.pan.server.modules.file.context;
 
 import lombok.Data;
+import org.xu.pan.server.modules.file.entity.YPanUserFile;
 
 import java.io.Serializable;
 import java.util.List;

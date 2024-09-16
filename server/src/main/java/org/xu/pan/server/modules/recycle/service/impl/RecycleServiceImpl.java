@@ -110,7 +110,8 @@ public class RecycleServiceImpl implements IRecycleService {
      * @param context
      */
     private void doDelete(DeleteContext context) {
-        List<Long> fileIdList = context.getFileIdList();
+        List<YPanUserFile> allRecords = context.getAllRecords();
+        List<Long> fileIdList = allRecords.stream().map(YPanUserFile::getFileId).collect(Collectors.toList());
         if (!iUserFileService.removeByIds(fileIdList)) {
             throw new YPanBusinessException("文件删除失败");
         }

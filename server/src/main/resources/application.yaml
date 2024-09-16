@@ -95,7 +95,7 @@ org:
             access-key-secret:
             auto-create-bucket: true
       server:
-        share-prefix: http://127.0.0.1:5173/
+        share-prefix: http://127.0.0.1:5173/share/
       bloom:
         filter:
           local:

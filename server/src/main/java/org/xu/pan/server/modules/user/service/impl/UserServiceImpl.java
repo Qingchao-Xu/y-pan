@@ -282,7 +282,7 @@ public class UserServiceImpl extends ServiceImpl<YPanUserMapper, YPanUser>
      */
     private void checkOldPassword(ChangePasswordContext changePasswordContext) {
         Long userId = changePasswordContext.getUserId();
-        String oldPassword = changePasswordContext.getOldPassword();
+        String oldPassword = changePasswordContext.getPassword();
 
         YPanUser entity = getById(userId);
         if (Objects.isNull(entity)) {
@@ -321,7 +321,7 @@ public class UserServiceImpl extends ServiceImpl<YPanUserMapper, YPanUser>
      */
     private void checkAndResetUserPassword(ResetPasswordContext resetPasswordContext) {
         String username = resetPasswordContext.getUsername();
-        String password = resetPasswordContext.getPassword();
+        String password = resetPasswordContext.getNewPassword();
         YPanUser entity = getYPanUserByUsername(username);
         if (Objects.isNull(entity)) {
             throw new YPanBusinessException("用户信息不存在");

@@ -141,6 +141,14 @@ public interface IUserFileService extends IService<YPanUserFile> {
     List<FileSearchResultVO> search(FileSearchContext context);
 
     /**
+     * 获取面包屑列表
+     *
+     * @param context
+     * @return
+     */
+    List<BreadcrumbVO> getBreadcrumbs(QueryBreadcrumbsContext context);
+
+    /**
      * 递归查询所有子文件信息
      * @param records
      * @return

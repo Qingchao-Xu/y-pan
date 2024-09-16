@@ -371,6 +371,32 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
     }
 
     /**
+     * 获取面包屑列表
+     * <p>
+     * 1、获取用户所有文件夹信息
+     * 2、拼接需要用到的面包屑的列表
+     *
+     * @param context
+     * @return
+     */
+    @Override
+    public List<BreadcrumbVO> getBreadcrumbs(QueryBreadcrumbsContext context) {
+        List<YPanUserFile> folderRecords = queryFolderRecords(context.getUserId());
+        Map<Long, BreadcrumbVO> prepareBreadcrumbVOMap = folderRecords.stream().map(BreadcrumbVO::transfer).collect(Collectors.toMap(BreadcrumbVO::getId, a -> a));
+        BreadcrumbVO currentNode;
+        Long fileId = context.getFileId();
+        List<BreadcrumbVO> result = Lists.newLinkedList();
+        do {
+            currentNode = prepareBreadcrumbVOMap.get(fileId);
+            if (Objects.nonNull(currentNode)) {
+                result.add(0, currentNode);
+                fileId = currentNode.getParentId();
+            }
+        } while (Objects.nonNull(currentNode));
+        return result;
+    }
+
+    /**
      * 递归查询所有的子文件信息
      *
      * @param records
@@ -1064,14 +1090,26 @@ public class UserFileServiceImpl extends ServiceImpl<YPanUserFileMapper, YPanUse
             newFilenameSuffix = filename.replace(newFilenameWithoutSuffix, StringUtils.EMPTY);
         }
 
-        int count = getDuplicateFilename(entity, newFilenameWithoutSuffix);
+        int num = 1;
+        while (num <= 100) {
+            newFilenamePointPosition = entity.getFilename().lastIndexOf(YPanConstants.POINT_STR);
+            String filenameWithoutSuffix;
+            if (newFilenamePointPosition == YPanConstants.MINUS_ONE_INT) {
+                filenameWithoutSuffix = entity.getFilename();
+            } else {
+                filenameWithoutSuffix = entity.getFilename().substring(YPanConstants.ZERO_INT, newFilenamePointPosition);
+            }
+            int count = getDuplicateFilename(entity, filenameWithoutSuffix);
 
-        if (count == 0) {
-            return;
+            if (count == 0) {
+                return;
+            }
+
+            String newFilename = assembleNewFilename(newFilenameWithoutSuffix, num, newFilenameSuffix);
+            entity.setFilename(newFilename);
+            num++;
         }
-
-        String newFilename = assembleNewFilename(newFilenameWithoutSuffix, count, newFilenameSuffix);
-        entity.setFilename(newFilename);
+        throw new YPanBusinessException(filename + " 的重名文件过多，请修改文件名称");
     }
 
     /**

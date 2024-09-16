@@ -195,7 +195,7 @@ public class UserTest {
 
         ResetPasswordContext resetPasswordContext = new ResetPasswordContext();
         resetPasswordContext.setUsername(USERNAME);
-        resetPasswordContext.setPassword(PASSWORD + "_change");
+        resetPasswordContext.setNewPassword(PASSWORD + "_change");
         resetPasswordContext.setToken(token);
 
         iUserService.resetPassword(resetPasswordContext);
@@ -221,7 +221,7 @@ public class UserTest {
 
         ResetPasswordContext resetPasswordContext = new ResetPasswordContext();
         resetPasswordContext.setUsername(USERNAME);
-        resetPasswordContext.setPassword(PASSWORD + "_change");
+        resetPasswordContext.setNewPassword(PASSWORD + "_change");
         resetPasswordContext.setToken(token + "_change");
 
         iUserService.resetPassword(resetPasswordContext);
@@ -239,7 +239,7 @@ public class UserTest {
         ChangePasswordContext changePasswordContext = new ChangePasswordContext();
 
         changePasswordContext.setUserId(register);
-        changePasswordContext.setOldPassword(PASSWORD);
+        changePasswordContext.setPassword(PASSWORD);
         changePasswordContext.setNewPassword(PASSWORD + "_change");
 
         iUserService.changePassword(changePasswordContext);
@@ -257,7 +257,7 @@ public class UserTest {
         ChangePasswordContext changePasswordContext = new ChangePasswordContext();
 
         changePasswordContext.setUserId(register);
-        changePasswordContext.setOldPassword(PASSWORD + "_change");
+        changePasswordContext.setPassword(PASSWORD + "_change");
         changePasswordContext.setNewPassword(PASSWORD + "_change");
 
         iUserService.changePassword(changePasswordContext);

@@ -51,16 +51,16 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.xu.pan</groupId>-->
-<!--            <artifactId>y-pan-cache-redis</artifactId>-->
-<!--            <version>1.0</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.xu.pan</groupId>
-            <artifactId>y-pan-cache-caffeine</artifactId>
+            <artifactId>y-pan-cache-redis</artifactId>
             <version>1.0</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.xu.pan</groupId>-->
+<!--            <artifactId>y-pan-cache-caffeine</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.xu.pan</groupId>
             <artifactId>y-pan-storage-engine-local</artifactId>
@@ -81,16 +81,16 @@
             <artifactId>y-pan-bloom-filter-local</artifactId>
             <version>1.0</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>org.xu.pan</groupId>-->
-<!--            <artifactId>y-pan-lock-redis</artifactId>-->
-<!--            <version>1.0</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.xu.pan</groupId>
-            <artifactId>y-pan-lock-local</artifactId>
+            <artifactId>y-pan-lock-redis</artifactId>
             <version>1.0</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>org.xu.pan</groupId>-->
+<!--            <artifactId>y-pan-lock-local</artifactId>-->
+<!--            <version>1.0</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>org.xu.pan</groupId>
             <artifactId>y-pan-stream-rocketmq</artifactId>

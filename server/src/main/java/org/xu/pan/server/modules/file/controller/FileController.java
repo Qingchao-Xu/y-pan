@@ -49,8 +49,11 @@ public class FileController {
     @GetMapping("files")
     public R<List<YPanUserFileVO>> list(@NotBlank(message = "父文件夹ID不能为空") @RequestParam(value = "parentId", required = false) String parentId,
                                         @RequestParam(value = "fileTypes", required = false, defaultValue = FileConstants.ALL_FILE_TYPE) String fileTypes) {
+        Long realParentId = -1L;
+        if (!FileConstants.ALL_FILE_TYPE.equals(parentId)) {
+            realParentId = IdUtil.decrypt(parentId);
+        }
 
-        Long realParentId = IdUtil.decrypt(parentId);
         List<Integer> fileTypeArray = null;
 
         if (!Objects.equals(FileConstants.ALL_FILE_TYPE, fileTypes)) { // 不是查询全部类型，通过分割字符串，得到需要查询的类型数组
@@ -280,6 +283,21 @@ public class FileController {
             context.setFileTypeArray(fileTypeArray);
         }
         List<FileSearchResultVO> result = iUserFileService.search(context);
+        return R.data(result);
+    }
+
+    @ApiOperation(
+            value = "查询面包屑列表",
+            notes = "该接口提供了查询面包屑列表的功能",
+            consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE,
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE
+    )
+    @GetMapping("file/breadcrumbs")
+    public R<List<BreadcrumbVO>> getBreadcrumbs(@NotBlank(message = "文件ID不能为空") @RequestParam(value = "fileId", required = false) String fileId) {
+        QueryBreadcrumbsContext context = new QueryBreadcrumbsContext();
+        context.setFileId(IdUtil.decrypt(fileId));
+        context.setUserId(UserIdUtil.get());
+        List<BreadcrumbVO> result = iUserFileService.getBreadcrumbs(context);
         return R.data(result);
     }
 
